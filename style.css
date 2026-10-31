@@ -825,3 +825,175 @@ input:focus, textarea:focus {
     padding: 6px;
   }
 }
+
+
+/* Office Design — restrained luxury 3D visual layer.
+   Presentation-only enhancement: no content, media, layout order, or behavior changes. */
+:root {
+  --od-depth-shadow: 0 24px 54px rgba(4, 18, 35, 0.18);
+  --od-gold-glow: 0 14px 34px rgba(212, 166, 74, 0.16);
+}
+
+body {
+  perspective: 1400px;
+  perspective-origin: 50% 0;
+}
+
+.header {
+  transform: translateZ(18px);
+  box-shadow: 0 12px 34px rgba(8, 26, 49, 0.12);
+}
+
+.hero {
+  isolation: isolate;
+  overflow: hidden;
+  background-attachment: fixed;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: min(54vw, 620px);
+  aspect-ratio: 1;
+  inset-inline-start: -12%;
+  top: 8%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(212,166,74,.20) 0%, rgba(212,166,74,.07) 34%, transparent 70%);
+  filter: blur(12px);
+  transform: translate3d(0,0,35px);
+}
+
+.hero-overlay {
+  transform: translateZ(1px);
+}
+
+.hero-content {
+  transform: translateZ(46px);
+  text-shadow: 0 8px 28px rgba(0,0,0,.22);
+}
+
+.hero h1 {
+  text-shadow: 0 12px 34px rgba(0,0,0,.34);
+}
+
+.hero .btn {
+  box-shadow: 0 12px 24px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.24);
+}
+
+.stat-card,
+.about-card,
+.card,
+.feature,
+.step,
+.contact-form,
+.about-banner-image {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  box-shadow: var(--shadow-soft), 0 2px 0 rgba(255,255,255,.38) inset;
+  transition:
+    transform .42s cubic-bezier(.2,.75,.25,1),
+    box-shadow .42s ease,
+    border-color .3s ease,
+    background .3s ease;
+}
+
+.stat-card:hover,
+.about-card:hover,
+.card:hover,
+.feature:hover,
+.step:hover {
+  transform: perspective(1000px) translateY(-9px) rotateX(2deg) rotateY(-1.5deg) translateZ(12px);
+  box-shadow: var(--od-depth-shadow), var(--od-gold-glow);
+}
+
+.card > span,
+.card > h3,
+.about-card > h3,
+.about-card > p,
+.feature > h3,
+.step > * {
+  transform: translateZ(10px);
+}
+
+.gallery-item,
+.review-shot {
+  perspective: 900px;
+}
+
+.gallery-item img,
+.review-shot img {
+  transform: translateZ(0) rotateX(0);
+  transform-origin: center bottom;
+  transition: transform .48s cubic-bezier(.2,.75,.25,1), box-shadow .48s ease, filter .48s ease;
+}
+
+.gallery-item img:hover,
+.review-shot img:hover {
+  transform: perspective(900px) rotateX(3deg) rotateY(-3deg) translateY(-8px) translateZ(18px) scale(1.025);
+  box-shadow: 0 26px 48px rgba(4,18,35,.24), 0 0 0 1px rgba(212,166,74,.35);
+  filter: saturate(1.06);
+}
+
+.about-banner-image {
+  transform: perspective(1200px) rotateX(1deg) translateZ(8px);
+}
+
+.about-banner-image:hover {
+  transform: perspective(1200px) rotateX(0) translateY(-5px) translateZ(18px);
+  box-shadow: var(--od-depth-shadow), var(--od-gold-glow);
+}
+
+.btn {
+  transform: translateZ(0);
+  box-shadow: 0 8px 18px rgba(9,39,74,.18), inset 0 1px 0 rgba(255,255,255,.22);
+}
+
+.btn:hover {
+  transform: translateY(-3px) translateZ(8px);
+}
+
+.contact-form:focus-within {
+  box-shadow: var(--od-depth-shadow), 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.floating-whatsapp,
+.floating-call,
+.back-to-top {
+  box-shadow: 0 12px 28px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.3);
+  transition: transform .3s ease, box-shadow .3s ease, opacity .25s ease;
+}
+
+.floating-whatsapp:hover,
+.floating-call:hover,
+.back-to-top:hover {
+  transform: translateY(-5px) translateZ(12px) scale(1.045);
+  box-shadow: 0 18px 34px rgba(0,0,0,.28), 0 0 22px rgba(212,166,74,.16);
+}
+
+@media (max-width: 768px), (hover: none) {
+  .hero { background-attachment: scroll; }
+  .hero-content { transform: none; }
+  .hero::before { width: 80vw; filter: blur(18px); }
+  .stat-card:hover,
+  .about-card:hover,
+  .card:hover,
+  .feature:hover,
+  .step:hover,
+  .gallery-item img:hover,
+  .review-shot img:hover,
+  .about-banner-image:hover {
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .hero { background-attachment: scroll; }
+}
