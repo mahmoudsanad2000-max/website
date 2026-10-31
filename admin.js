@@ -18,10 +18,10 @@ async function checkAdmin(user){const {data,error}=await db.from('admin_users').
 async function showApp(user){await checkAdmin(user);currentUser=user;$('userEmail').textContent=user.email;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');await refreshAll()}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='جارٍ التحقق...';const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){$('loginError').textContent=error.message;return}try{await showApp(data.user)}catch(err){$('loginError').textContent=err.message;await db.auth.signOut()}});
 $('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.reload()});
-const pageNames={overview:'نظرة عامة',content:'محتوى الموقع',media:'الصور والمعرض',posts:'المنشورات',requests:'طلبات العملاء',customers:'سجل العملاء'};
+const pageNames={overview:'نظرة عامة',content:'محتوى الموقع',media:'الصور والمعرض',posts:'المنشورات',requests:'طلبات العملاء',customers:'سجل العملاء',seo:'SEO والتسويق'};
 function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));$('page-'+page).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));$('pageTitle').textContent=pageNames[page]}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
-async function refreshAll(){await Promise.all([loadContent(),loadMedia(),loadPosts(),loadRequests()]);$('mediaCount').textContent=mediaRows.length;$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length}
+async function refreshAll(){await Promise.all([loadContent(),loadSeo(),loadMedia(),loadPosts(),loadRequests()]);$('mediaCount').textContent=mediaRows.length;$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length}
 const requestStatuses=[['new','جديد'],['contacted','تم التواصل'],['scheduled','تم تحديد موعد'],['in_progress','قيد التنفيذ'],['completed','مكتمل'],['cancelled','ملغي']];
 async function loadRequests(){
   $('requestsStatus').textContent='جارٍ تحميل الطلبات...';
@@ -165,6 +165,28 @@ $('requestSearch').addEventListener('input',renderRequests);
 $('requestStatusFilter').addEventListener('change',renderRequests);
 $('refreshRequests').addEventListener('click',loadRequests);
 async function loadContent(){const {data,error}=await db.from('site_content').select('*');if(error)throw error;const values=Object.fromEntries((data||[]).map(r=>[r.key,r.value]));$('contentFields').innerHTML=fields.map(([key,label,type])=>`<label>${label}${type==='textarea'?`<textarea rows="3" data-key="${key}">${safe(values[key]||'')}</textarea>`:`<input data-key="${key}" value="${safe(values[key]||'')}">`}</label>`).join('')}
+async function loadSeo(){
+  const keys=['seo_title','seo_description','seo_keywords'];
+  const {data,error}=await db.from('site_content').select('key,value').in('key',keys);
+  if(error)throw error;
+  const values=Object.fromEntries((data||[]).map(row=>[row.key,row.value]));
+  $('seoTitle').value=values.seo_title||'';
+  $('seoDescription').value=values.seo_description||'';
+  $('seoKeywords').value=values.seo_keywords||'';
+}
+$('seoForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const rows=[
+    {key:'seo_title',value:$('seoTitle').value.trim()},
+    {key:'seo_description',value:$('seoDescription').value.trim()},
+    {key:'seo_keywords',value:$('seoKeywords').value.trim()}
+  ].map(row=>({...row,updated_by:currentUser.id,updated_at:new Date().toISOString()}));
+  $('seoStatus').textContent='جارٍ حفظ إعدادات SEO...';
+  const {error}=await db.from('site_content').upsert(rows,{onConflict:'key'});
+  $('seoStatus').textContent=error?'تعذر الحفظ: '+error.message:'تم حفظ إعدادات SEO. ستظهر التغييرات على الموقع بعد تحديث الصفحة.';
+  if(!error)toast('تم حفظ إعدادات SEO');
+});
+
 $('saveContent').addEventListener('click',async()=>{const rows=[...document.querySelectorAll('[data-key]')].map(el=>({key:el.dataset.key,value:el.value,updated_by:currentUser.id,updated_at:new Date().toISOString()}));const {error}=await db.from('site_content').upsert(rows,{onConflict:'key'});$('contentStatus').textContent=error?error.message:'تم حفظ التعديلات بنجاح.';if(!error)toast('تم حفظ محتوى الموقع')});
 async function loadMedia(){const {data,error}=await db.from('media_items').select('*').order('section').order('sort_order');if(error)throw error;mediaRows=data||[];renderMedia()}
 function renderMedia(){const filter=$('mediaFilter').value;const list=mediaRows.filter(m=>filter==='all'||m.section===filter);$('mediaGrid').innerHTML=list.map(m=>`<article class="media-card"><img src="${safe(publicUrl(m.file_path))}" alt="${safe(m.alt_text)}"><div class="meta"><b>${safe(m.title||'صورة بدون عنوان')}</b><small>${safe(m.section)} · ${m.is_published?'ظاهرة':'مخفية'} · ترتيب ${m.sort_order}</small></div><div class="media-actions"><button class="mini" data-toggle-media="${m.id}">${m.is_published?'إخفاء':'إظهار'}</button><button class="mini danger" data-delete-media="${m.id}">حذف</button></div></article>`).join('')||'<p class="muted">لا توجد صور في هذا القسم حتى الآن.</p>';document.querySelectorAll('[data-toggle-media]').forEach(b=>b.onclick=()=>toggleMedia(b.dataset.toggleMedia));document.querySelectorAll('[data-delete-media]').forEach(b=>b.onclick=()=>deleteMedia(b.dataset.deleteMedia))}
