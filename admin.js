@@ -11,15 +11,59 @@ const fields = [
   ['whatsapp_number','رقم واتساب بصيغة دولية بدون +','text']
 ];
 let currentUser = null, mediaRows = [], postRows = [], requestRows = [];
-function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}
+let requestRealtimeChannel = null, alertAudio = null, alertSoundEnabled = false;
+function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),4200)}
+function playRequestAlertSound(){
+  if(!alertSoundEnabled||!alertAudio)return;
+  try{
+    const now=alertAudio.currentTime;
+    [880,660,880].forEach((frequency,index)=>{
+      const oscillator=alertAudio.createOscillator(),gain=alertAudio.createGain();
+      oscillator.type='sine';oscillator.frequency.value=frequency;
+      gain.gain.setValueAtTime(0.0001,now+index*0.18);
+      gain.gain.exponentialRampToValueAtTime(0.18,now+index*0.18+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001,now+index*0.18+0.14);
+      oscillator.connect(gain);gain.connect(alertAudio.destination);
+      oscillator.start(now+index*0.18);oscillator.stop(now+index*0.18+0.15);
+    });
+  }catch(error){console.warn('تعذر تشغيل صوت التنبيه',error)}
+}
+async function enableRequestSound(){
+  try{
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextClass){toast('المتصفح لا يدعم صوت التنبيه');return}
+    if(!alertAudio)alertAudio=new AudioContextClass();
+    await alertAudio.resume();alertSoundEnabled=true;
+    $('soundToggle').textContent='🔔 الصوت مفعل';playRequestAlertSound();
+    toast('تم تفعيل صوت تنبيه الطلبات');
+  }catch(error){toast('تعذر تفعيل الصوت. تحقق من إعدادات المتصفح.')}
+}
+$('soundToggle').addEventListener('click',enableRequestSound);
+function startRequestRealtime(){
+  if(requestRealtimeChannel)db.removeChannel(requestRealtimeChannel);
+  requestRealtimeChannel=db.channel('admin-service-requests')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'service_requests'},payload=>{
+      const incoming=payload.new;
+      if(!incoming||requestRows.some(r=>String(r.id)===String(incoming.id)))return;
+      requestRows.unshift(incoming);requestRows=requestRows.slice(0,200);
+      renderRequests();renderCustomers();
+      $('requestsStatus').textContent='وصل طلب جديد الآن. عدد الطلبات المعروضة: '+requestRows.length;
+      toast('🔔 طلب جديد من '+(incoming.customer_name||'عميل جديد'));
+      playRequestAlertSound();
+    })
+    .subscribe(status=>{
+      if(status==='SUBSCRIBED')console.info('تم تفعيل تنبيهات الطلبات المباشرة');
+      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('تعذر الاتصال بتنبيهات الطلبات:',status);
+    });
+}
 function safe(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function publicUrl(path){return db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}
 async function checkAdmin(user){const {data,error}=await db.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();if(error||!data)throw new Error('هذا الحساب ليس ضمن قائمة مديري الموقع. اطلب إضافة حسابك إلى جدول admin_users.');return true}
-async function showApp(user){await checkAdmin(user);currentUser=user;$('userEmail').textContent=user.email;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');await refreshAll()}
+async function showApp(user){await checkAdmin(user);currentUser=user;$('userEmail').textContent=user.email;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');await refreshAll();startRequestRealtime()}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='جارٍ التحقق...';const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){$('loginError').textContent=error.message;return}try{await showApp(data.user)}catch(err){$('loginError').textContent=err.message;await db.auth.signOut()}});
 $('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.reload()});
-const pageNames={overview:'نظرة عامة',content:'محتوى الموقع',media:'الصور والمعرض',posts:'المنشورات',requests:'طلبات العملاء',customers:'سجل العملاء',seo:'SEO والتسويق'};
-function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));$('page-'+page).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));$('pageTitle').textContent=pageNames[page]}
+const pageNames={overview:'نظرة عامة',content:'محتوى الموقع',media:'الصور والمعرض',posts:'المنشورات',requests:'طلبات العملاء',customers:'سجل العملاء',seo:'SEO والتسويق',visitors:'إحصائيات الزوار'};
+function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));$('page-'+page).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));$('pageTitle').textContent=pageNames[page];if(page==='visitors')loadVisitorStats()}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 async function refreshAll(){await Promise.all([loadContent(),loadSeo(),loadMedia(),loadPosts(),loadRequests()]);$('mediaCount').textContent=mediaRows.length;$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length}
 const requestStatuses=[['new','جديد'],['contacted','تم التواصل'],['scheduled','تم تحديد موعد'],['in_progress','قيد التنفيذ'],['completed','مكتمل'],['cancelled','ملغي']];
@@ -88,6 +132,9 @@ function updateRequestStats(){
   $('requestNew').textContent=requestRows.filter(r=>r.status==='new').length;
   $('requestInProgress').textContent=requestRows.filter(r=>r.status==='in_progress').length;
   $('requestCompleted').textContent=requestRows.filter(r=>r.status==='completed').length;
+  const newCount=requestRows.filter(r=>r.status==='new').length;
+  $('newRequestBadge').textContent=newCount;
+  $('newRequestBadge').classList.toggle('hidden',newCount===0);
 }
 function renderRequests(){
   updateRequestStats();
@@ -165,6 +212,28 @@ $('requestSearch').addEventListener('input',renderRequests);
 $('requestStatusFilter').addEventListener('change',renderRequests);
 $('refreshRequests').addEventListener('click',loadRequests);
 async function loadContent(){const {data,error}=await db.from('site_content').select('*');if(error)throw error;const values=Object.fromEntries((data||[]).map(r=>[r.key,r.value]));$('contentFields').innerHTML=fields.map(([key,label,type])=>`<label>${label}${type==='textarea'?`<textarea rows="3" data-key="${key}">${safe(values[key]||'')}</textarea>`:`<input data-key="${key}" value="${safe(values[key]||'')}">`}</label>`).join('')}
+
+async function loadVisitorStats(){
+  $('visitorStatus').textContent='جارٍ تحميل إحصائيات الزوار...';
+  const [summary,daily]=await Promise.all([db.rpc('get_visit_stats'),db.rpc('get_visit_daily_stats',{days_back:30})]);
+  if(summary.error||daily.error){$('visitorStatus').textContent='تعذر تحميل الإحصائيات: '+(summary.error||daily.error).message;return}
+  const stats=(summary.data||[])[0]||{};
+  $('visitorTotal').textContent=Number(stats.total_visits||0).toLocaleString('ar-EG');
+  $('visitorUnique').textContent=Number(stats.unique_visitors||0).toLocaleString('ar-EG');
+  $('visitorToday').textContent=Number(stats.today_unique_visitors||0).toLocaleString('ar-EG');
+  $('visitorWeek').textContent=Number(stats.week_unique_visitors||0).toLocaleString('ar-EG');
+  $('visitorMonth').textContent=Number(stats.month_unique_visitors||0).toLocaleString('ar-EG');
+  const rows=daily.data||[],max=Math.max(1,...rows.map(r=>Number(r.unique_visitors||0)));
+  $('visitorsChart').innerHTML=rows.map(r=>{
+    const value=Number(r.unique_visitors||0),width=Math.max(value?3:0,value/max*100);
+    const date=new Date(r.visit_date+'T12:00:00');
+    const label=date.toLocaleDateString('ar-EG',{day:'numeric',month:'short'});
+    return '<div class="visitor-day"><div class="visitor-day-label">'+label+'</div><div class="visitor-track"><div class="visitor-fill" style="width:'+width+'%"></div></div><b>'+value.toLocaleString('ar-EG')+'</b></div>';
+  }).join('')||'<p class="muted">لا توجد زيارات مسجلة بعد.</p>';
+  $('visitorStatus').textContent='آخر تحديث: '+new Date().toLocaleString('ar-EG')+' · الأرقام تعرض زواراً فريدين حسب معرّف متصفح مجهول.';
+}
+$('refreshVisitors').addEventListener('click',loadVisitorStats);
+
 async function loadSeo(){
   const keys=['seo_title','seo_description','seo_keywords'];
   const {data,error}=await db.from('site_content').select('key,value').in('key',keys);
