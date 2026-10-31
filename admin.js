@@ -39,6 +39,67 @@ async function enableRequestSound(){
   }catch(error){toast('تعذر تفعيل الصوت. تحقق من إعدادات المتصفح.')}
 }
 $('soundToggle').addEventListener('click',enableRequestSound);
+
+$('pushToggle').addEventListener('click',enablePushNotifications);
+$('pushTest').addEventListener('click',sendPushTest);
+function base64UrlToBytes(value){
+  const normalized=value.replace(/-/g,'+').replace(/_/g,'/');
+  const binary=atob(normalized+'='.repeat((4-normalized.length%4)%4));
+  return Uint8Array.from(binary,c=>c.charCodeAt(0));
+}
+async function refreshPushButton(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){
+    $('pushToggle').textContent='الإشعارات غير مدعومة';$('pushToggle').disabled=true;return;
+  }
+  try{
+    const registration=await navigator.serviceWorker.ready;
+    const subscription=await registration.pushManager.getSubscription();
+    $('pushToggle').textContent=subscription?'🔔 إشعارات الهاتف مفعلة':'تفعيل إشعارات الهاتف';
+  }catch(error){console.warn('تعذر فحص اشتراك الإشعارات',error)}
+}
+async function enablePushNotifications(){
+  const button=$('pushToggle');button.disabled=true;
+  try{
+    if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){
+      toast('المتصفح لا يدعم إشعارات الهاتف. جرّب تثبيت لوحة الإدارة من Chrome أو Safari.');return;
+    }
+    const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isInstalled=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+    if(isIOS&&!isInstalled){toast('على iPhone أضف لوحة الإدارة إلى الشاشة الرئيسية أولاً ثم افتحها منها.');return;}
+    let permission=Notification.permission;
+    if(permission!=='granted')permission=await Notification.requestPermission();
+    if(permission!=='granted'){toast('لم يتم السماح بالإشعارات. فعّلها من إعدادات المتصفح والهاتف.');return;}
+    const {data:setup,error:setupError}=await db.functions.invoke('office-push',{body:{action:'setup'}});
+    if(setupError)throw setupError;
+    if(!setup?.publicKey)throw new Error('تعذر إعداد مفتاح الإشعارات.');
+    const registration=await navigator.serviceWorker.ready;
+    let subscription=await registration.pushManager.getSubscription();
+    if(!subscription){
+      subscription=await registration.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:base64UrlToBytes(setup.publicKey)
+      });
+    }
+    const {error}=await db.functions.invoke('office-push',{body:{action:'subscribe',subscription:subscription.toJSON()}});
+    if(error)throw error;
+    button.textContent='🔔 إشعارات الهاتف مفعلة';
+    toast('تم تفعيل إشعارات الطلبات على هذا الجهاز.');
+  }catch(error){
+    console.error('Push setup failed',error);
+    toast('تعذر تفعيل الإشعارات: '+(error.message||'تحقق من اتصال الإنترنت وإعدادات الهاتف.'));
+  }finally{button.disabled=false;await refreshPushButton()}
+}
+async function sendPushTest(){
+  const button=$('pushTest');button.disabled=true;
+  try{
+    const {data,error}=await db.functions.invoke('office-push',{body:{action:'test'}});
+    if(error)throw error;
+    if(!data?.ok)throw new Error(data?.error||'لم يصل الإشعار التجريبي.');
+    toast('تم إرسال الإشعار التجريبي. اقفل شاشة الهاتف وتأكد من ظهوره.');
+  }catch(error){toast('تعذر إرسال الإشعار التجريبي: '+(error.message||''))}
+  finally{button.disabled=false}
+}
+
 function startRequestRealtime(){
   if(requestRealtimeChannel)db.removeChannel(requestRealtimeChannel);
   requestRealtimeChannel=db.channel('admin-service-requests')
@@ -59,7 +120,7 @@ function startRequestRealtime(){
 function safe(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function publicUrl(path){return db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}
 async function checkAdmin(user){const {data,error}=await db.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();if(error||!data)throw new Error('هذا الحساب ليس ضمن قائمة مديري الموقع. اطلب إضافة حسابك إلى جدول admin_users.');return true}
-async function showApp(user){await checkAdmin(user);currentUser=user;$('userEmail').textContent=user.email;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');await refreshAll();startRequestRealtime()}
+async function showApp(user){await checkAdmin(user);currentUser=user;$('userEmail').textContent=user.email;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');await refreshAll();startRequestRealtime();refreshPushButton()}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='جارٍ التحقق...';const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){$('loginError').textContent=error.message;return}try{await showApp(data.user)}catch(err){$('loginError').textContent=err.message;await db.auth.signOut()}});
 $('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.reload()});
 const pageNames={overview:'نظرة عامة',content:'محتوى الموقع',media:'الصور والمعرض',posts:'المنشورات',requests:'طلبات العملاء',customers:'سجل العملاء',seo:'SEO والتسويق',visitors:'إحصائيات الزوار'};
