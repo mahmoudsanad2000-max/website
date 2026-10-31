@@ -75,7 +75,7 @@
     const email=document.querySelector('.contact-info a[href^="mailto:"]'); if(email&&c.contact_email){email.href=`mailto:${c.contact_email}`;email.textContent=`📧 البريد الإلكتروني: ${c.contact_email}`;}
     const address=[...document.querySelectorAll('.contact-info p')].find(x=>x.textContent.includes('العنوان')); if(address&&c.contact_address) address.innerHTML=`<strong>العنوان:</strong> ${escapeHtml(c.contact_address)}`;
     const phoneLinks=[...document.querySelectorAll('a[href^="tel:"],a[href*="wa.me/"]')];
-    if(c.contact_phone) phoneLinks.filter(a=>a.href.startsWith('tel:')).forEach(a=>a.href=`tel:${c.contact_phone.replace(/\s/g,'')}`);
+    if(c.contact_phone) phoneLinks.filter(a=>a.href.startsWith('tel:')).forEach(a=>{a.href=`tel:${c.contact_phone.replace(/\s/g,'')}`;if(a.classList.contains('btn-secondary'))a.textContent=`📞 الهاتف: ${c.contact_phone}`;});
     if(c.whatsapp_number) phoneLinks.filter(a=>a.href.includes('wa.me/')).forEach(a=>a.href=`https://wa.me/${c.whatsapp_number.replace(/\D/g,'')}`);
     const hero=media?.find(x=>x.section==='hero'); if(hero) document.querySelector('.hero')?.style.setProperty('background-image',`url("${getUrl(hero.file_path)}")`);
     const logo=media?.find(x=>x.section==='logo');if(logo)document.querySelectorAll('.logo-image').forEach(img=>{img.src=getUrl(logo.file_path);img.alt=logo.alt_text||logo.title||'Office Design';});
