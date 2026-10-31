@@ -30,10 +30,23 @@ async function loadRequests(){
   requestRows=data||[];renderRequests();
   $('requestsStatus').textContent='عدد الطلبات المعروضة: '+requestRows.length;
 }
+function updateRequestStats(){
+  $('requestTotal').textContent=requestRows.length;
+  $('requestNew').textContent=requestRows.filter(r=>r.status==='new').length;
+  $('requestInProgress').textContent=requestRows.filter(r=>r.status==='in_progress').length;
+  $('requestCompleted').textContent=requestRows.filter(r=>r.status==='completed').length;
+}
 function renderRequests(){
+  updateRequestStats();
   const body=$('requestsBody');
-  if(!requestRows.length){body.innerHTML='<tr><td class="request-empty" colspan="11">لا توجد طلبات حتى الآن.</td></tr>';return}
-  body.innerHTML=requestRows.map(r=>{
+  const term=$('requestSearch').value.trim().toLowerCase();
+  const status=$('requestStatusFilter').value;
+  const filtered=requestRows.filter(r=>{
+    const matchesText=!term||String(r.customer_name||'').toLowerCase().includes(term)||String(r.phone||'').toLowerCase().includes(term);
+    return matchesText&&(status==='all'||r.status===status);
+  });
+  if(!filtered.length){body.innerHTML='<tr><td class="request-empty" colspan="11">'+(requestRows.length?'لا توجد طلبات مطابقة للبحث أو الفلتر.':'لا توجد طلبات حتى الآن.')+'</td></tr>';return}
+  body.innerHTML=filtered.map(r=>{
     const date=r.created_at?new Date(r.created_at).toLocaleString('ar-EG'):'—';
     const options=requestStatuses.map(([value,label])=>'<option value="'+value+'" '+(r.status===value?'selected':'')+'>'+label+'</option>').join('');
     return '<tr><td>'+safe(date)+'</td><td>'+safe(r.customer_name)+'</td><td><a href="tel:'+safe(r.phone)+'">'+safe(r.phone)+'</a></td><td>'+safe(r.email||'—')+'</td><td>'+safe(r.service_type||'—')+'</td><td>'+safe(r.description||'—')+'</td><td><select class="request-status" data-request-status="'+safe(r.id)+'">'+options+'</select></td><td><input class="request-cost" type="number" min="0" step="0.01" placeholder="تقديرية" value="'+(r.estimated_cost??'')+'" data-req-est="'+safe(r.id)+'"></td><td><input class="request-cost" type="number" min="0" step="0.01" placeholder="نهائية" value="'+(r.final_cost??'')+'" data-req-final="'+safe(r.id)+'"></td><td><textarea class="request-notes" rows="2" placeholder="ملاحظات داخلية" data-req-notes="'+safe(r.id)+'">'+safe(r.admin_notes||'')+'</textarea></td><td><button class="mini" type="button" data-save-request="'+safe(r.id)+'">حفظ</button></td></tr>';
@@ -62,6 +75,8 @@ async function updateRequestStatus(id,status,select){
   const row=requestRows.find(x=>x.id===id);if(row)row.status=status;
   toast('تم تحديث حالة الطلب');
 }
+$('requestSearch').addEventListener('input',renderRequests);
+$('requestStatusFilter').addEventListener('change',renderRequests);
 $('refreshRequests').addEventListener('click',loadRequests);
 async function loadContent(){const {data,error}=await db.from('site_content').select('*');if(error)throw error;const values=Object.fromEntries((data||[]).map(r=>[r.key,r.value]));$('contentFields').innerHTML=fields.map(([key,label,type])=>`<label>${label}${type==='textarea'?`<textarea rows="3" data-key="${key}">${safe(values[key]||'')}</textarea>`:`<input data-key="${key}" value="${safe(values[key]||'')}">`}</label>`).join('')}
 $('saveContent').addEventListener('click',async()=>{const rows=[...document.querySelectorAll('[data-key]')].map(el=>({key:el.dataset.key,value:el.value,updated_by:currentUser.id,updated_at:new Date().toISOString()}));const {error}=await db.from('site_content').upsert(rows,{onConflict:'key'});$('contentStatus').textContent=error?error.message:'تم حفظ التعديلات بنجاح.';if(!error)toast('تم حفظ محتوى الموقع')});
