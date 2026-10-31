@@ -22,7 +22,7 @@ const pageNames={overview:'نظرة عامة',content:'محتوى الموقع',
 function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));$('page-'+page).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));$('pageTitle').textContent=pageNames[page]}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 async function refreshAll(){await Promise.all([loadContent(),loadMedia(),loadPosts(),loadRequests()]);$('mediaCount').textContent=mediaRows.length;$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length}
-const requestStatuses=[['new','جديد'],['in_progress','قيد التنفيذ'],['completed','مكتمل'],['cancelled','ملغي']];
+const requestStatuses=[['new','جديد'],['contacted','تم التواصل'],['scheduled','تم تحديد موعد'],['in_progress','قيد التنفيذ'],['completed','مكتمل'],['cancelled','ملغي']];
 async function loadRequests(){
   $('requestsStatus').textContent='جارٍ تحميل الطلبات...';
   const {data,error}=await db.from('service_requests').select('id,customer_name,phone,email,service_type,description,status,created_at').order('created_at',{ascending:false}).limit(200);
