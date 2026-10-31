@@ -31,7 +31,7 @@ async function loadRequests(){
   $('requestsStatus').textContent='عدد الطلبات المعروضة: '+requestRows.length;
 }
 function customerIdentity(r){
-  const phone=String(r.phone||'').replace(/\\D/g,'');
+  const phone=String(r.phone||'').replace(/\D/g,'');
   if(phone)return 'phone:'+phone;
   const email=String(r.email||'').trim().toLowerCase();
   if(email)return 'email:'+email;
@@ -54,14 +54,35 @@ function renderCustomers(){
   $('customerTotal').textContent=groups.size;
   $('customerRequestsTotal').textContent=requestRows.length;
   if(!customers.length){target.innerHTML='<tr><td colspan="6" class="request-empty">لا يوجد عملاء مطابقون للبحث.</td></tr>';return}
-  target.innerHTML=customers.map(c=>'<tr><td>'+safe(c.name)+'</td><td><a href="tel:'+safe(c.phone)+'">'+safe(c.phone||'—')+'</a></td><td>'+safe(c.email||'—')+'</td><td>'+c.requests.length+'</td><td>'+safe(c.latest?new Date(c.latest).toLocaleDateString('ar-EG'):'—')+'</td><td><button class="mini" type="button" data-customer-requests="'+safe(c.key)+'">عرض الطلبات</button></td></tr>').join('');
-  target.querySelectorAll('[data-customer-requests]').forEach(button=>button.addEventListener('click',()=>{
-    const customer=groups.get(button.dataset.customerRequests);if(!customer)return;
-    $('requestSearch').value=customer.phone||customer.name;
-    $('requestStatusFilter').value='all';renderRequests();go('requests');
+  target.innerHTML=customers.map(c=>'<tr><td>'+safe(c.name)+'</td><td><a href="tel:'+safe(c.phone)+'">'+safe(c.phone||'—')+'</a></td><td>'+safe(c.email||'—')+'</td><td>'+c.requests.length+'</td><td>'+safe(c.latest?new Date(c.latest).toLocaleDateString('ar-EG'):'—')+'</td><td><button class="mini" type="button" data-view-customer="'+safe(c.key)+'">ملف العميل</button></td></tr>').join('');
+  target.querySelectorAll('[data-view-customer]').forEach(button=>button.addEventListener('click',()=>{
+    const customer=groups.get(button.dataset.viewCustomer);if(customer)showCustomerProfile(customer);
   }));
 }
 $('customerSearch').addEventListener('input',renderCustomers);
+function showCustomerProfile(customer){
+  const requests=[...customer.requests].sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+  const finalTotal=requests.reduce((sum,r)=>sum+(Number(r.final_cost)||0),0);
+  const openCount=requests.filter(r=>!['completed','cancelled'].includes(r.status)).length;
+  const statusName=value=>(requestStatuses.find(x=>x[0]===value)||['','غير محدد'])[1];
+  const dateText=value=>value?new Date(value).toLocaleDateString('ar-EG'):'—';
+  const field=(label,value)=>'<div class="request-detail-item"><small>'+safe(label)+'</small><p>'+safe(value||'—')+'</p></div>';
+  const rows=requests.map(r=>'<tr><td>'+safe(r.id)+'</td><td>'+safe(dateText(r.created_at))+'</td><td>'+safe(r.service_type||'—')+'</td><td>'+safe(statusName(r.status))+'</td><td>'+safe(r.final_cost==null?'غير مسجل':Number(r.final_cost).toLocaleString('ar-EG')+' جنيه')+'</td><td>'+safe(r.admin_notes||'—')+'</td></tr>').join('');
+  $('customerProfileContent').innerHTML=
+    '<div class="request-detail-grid">'+
+    field('اسم العميل',customer.name)+field('رقم الهاتف',customer.phone)+
+    field('البريد الإلكتروني',customer.email)+field('العنوان',customer.address)+
+    field('عدد الطلبات',String(requests.length))+field('طلبات غير مكتملة',String(openCount))+
+    field('مجموع التكاليف النهائية المسجلة',finalTotal.toLocaleString('ar-EG')+' جنيه')+
+    '</div><p class="muted" style="margin:8px 0 12px">هذا المجموع مبني على خانة التكلفة النهائية في الطلبات، ولا يعني بالضرورة المبلغ المحصّل فعلياً.</p>'+
+    '<h3>كل طلبات العميل</h3><div class="requests-table-wrap"><table class="requests-table"><thead><tr><th>رقم الطلب</th><th>التاريخ</th><th>الخدمة</th><th>الحالة</th><th>التكلفة النهائية</th><th>ملاحظات الطلب</th></tr></thead><tbody>'+
+    (rows||'<tr><td colspan="6">لا توجد طلبات.</td></tr>')+'</tbody></table></div>';
+  $('customerProfileModal').classList.remove('hidden');
+}
+function closeCustomerProfile(){$('customerProfileModal').classList.add('hidden')}
+$('closeCustomerProfile').addEventListener('click',closeCustomerProfile);
+$('closeCustomerProfileBottom').addEventListener('click',closeCustomerProfile);
+$('customerProfileModal').addEventListener('click',e=>{if(e.target===$('customerProfileModal'))closeCustomerProfile()});
 function updateRequestStats(){
   $('requestTotal').textContent=requestRows.length;
   $('requestNew').textContent=requestRows.filter(r=>r.status==='new').length;
