@@ -68,7 +68,11 @@
     text('.footer-grid > div:nth-child(2) h4',c.footer_quick_title);
     text('.footer-grid > div:nth-child(3) h4',c.footer_social_title);
     text('.footer-grid > div:nth-child(3) p',c.footer_social_text);
-    text('.footer-bottom p',c.footer_copyright);
+    text('.footer-bottom p',c.footer_copyright);text('.footer-grid > div:first-child .logo-text',c.footer_brand_text);
+    const footerLinks=document.querySelectorAll('.footer-grid > div:nth-child(2) a');[c.footer_link_services,c.footer_link_why,c.footer_link_contact].forEach((v,i)=>{if(v&&footerLinks[i])footerLinks[i].textContent=v;});
+    text('.contact-info .btn-whatsapp',c.whatsapp_label);
+    const formLabels=document.querySelectorAll('.contact-form label');[c.form_name_label,c.form_phone_label,c.form_email_label,c.form_message_label].forEach((v,i)=>{if(v&&formLabels[i])formLabels[i].firstChild.textContent=v;});text('.contact-form button[type=submit]',c.form_submit_label);
+    const map=document.querySelector('.map-wrap iframe');if(map){if(c.map_embed_url)map.src=c.map_embed_url;if(c.map_title)map.title=c.map_title;}
     const navKeys=['nav_home','nav_about','nav_services','nav_why','nav_gallery','nav_how','nav_testimonials','nav_contact'];
     document.querySelectorAll('.nav-links a').forEach((a,i)=>{if(c[navKeys[i]])a.textContent=c[navKeys[i]];});
 
