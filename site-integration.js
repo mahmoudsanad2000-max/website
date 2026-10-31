@@ -5,7 +5,7 @@
   const KEY = 'sb_publishable_Cb_uRCVqJk1x3drkGuuTwQ__a4aOha1';
   const BUCKET = 'office-media';
   const client = window.supabase.createClient(URL, KEY);
-  const getUrl = path => client.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  const getUrl = path => /^(photo|screan)\\//.test(path) ? '/'+path : client.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
   function trackWebsiteVisit(){
     try{
       let visitorId=localStorage.getItem('office_design_visitor_id');
@@ -50,12 +50,35 @@
     text('.hero h1',c.hero_title); text('.hero-content > p',c.hero_description);
     text('#about h2',c.about_title); text('#about > .container > p',c.about_description);
     text('#services h2',c.services_title);
+    text('.hero-actions .btn-primary',c.hero_cta_primary);text('.hero-actions .btn-secondary',c.hero_cta_secondary);
+    const stats=document.querySelectorAll('.stats-grid .stat-card');
+    stats.forEach((card,i)=>{const n=c['stats_number_'+(i+1)],label=c['stats_label_'+(i+1)],counter=card.querySelector('.counter');if(counter&&n){counter.dataset.target=n;counter.textContent=n;}if(label)text('.stats-grid .stat-card:nth-child('+(i+1)+') p',label);});
+    const aboutCards=document.querySelectorAll('.about-cards .about-card');
+    aboutCards.forEach((card,i)=>{const title=c['about_card_title_'+(i+1)],description=c['about_card_description_'+(i+1)];if(title)card.querySelector('h3')&&(card.querySelector('h3').textContent=title);if(description)card.querySelector('p')&&(card.querySelector('p').textContent=description);});
+    const serviceCards=document.querySelectorAll('#services .cards-grid .card');
+    serviceCards.forEach((card,i)=>{const value=c['service_'+(i+1)];if(value)text('#services .cards-grid .card:nth-child('+(i+1)+') h3',value);});
+    text('#why h2',c.why_title);
+    const features=document.querySelectorAll('#why .feature-grid .feature');
+    features.forEach((card,i)=>{const value=c['why_feature_'+(i+1)];if(value)card.querySelector('h3')&&(card.querySelector('h3').textContent=value);});
+    text('#gallery h2',c.gallery_title);text('#how h2',c.how_title);
+    const steps=document.querySelectorAll('#how .steps-grid .step');
+    steps.forEach((card,i)=>{const value=c['how_step_'+(i+1)];if(value)text('#how .steps-grid .step:nth-child('+(i+1)+') h3',value);});
+    text('#testimonials h2',c.testimonials_title);text('#contact .contact-info h2',c.contact_title);
+    text('.footer-grid > div:first-child > p',c.footer_description);
+    text('.footer-grid > div:nth-child(2) h4',c.footer_quick_title);
+    text('.footer-grid > div:nth-child(3) h4',c.footer_social_title);
+    text('.footer-grid > div:nth-child(3) p',c.footer_social_text);
+    text('.footer-bottom p',c.footer_copyright);
+    const navKeys=['nav_home','nav_about','nav_services','nav_why','nav_gallery','nav_how','nav_testimonials','nav_contact'];
+    document.querySelectorAll('.nav-links a').forEach((a,i)=>{if(c[navKeys[i]])a.textContent=c[navKeys[i]];});
+
     const email=document.querySelector('.contact-info a[href^="mailto:"]'); if(email&&c.contact_email){email.href=`mailto:${c.contact_email}`;email.textContent=`📧 البريد الإلكتروني: ${c.contact_email}`;}
     const address=[...document.querySelectorAll('.contact-info p')].find(x=>x.textContent.includes('العنوان')); if(address&&c.contact_address) address.innerHTML=`<strong>العنوان:</strong> ${escapeHtml(c.contact_address)}`;
     const phoneLinks=[...document.querySelectorAll('a[href^="tel:"],a[href*="wa.me/"]')];
     if(c.contact_phone) phoneLinks.filter(a=>a.href.startsWith('tel:')).forEach(a=>a.href=`tel:${c.contact_phone.replace(/\s/g,'')}`);
     if(c.whatsapp_number) phoneLinks.filter(a=>a.href.includes('wa.me/')).forEach(a=>a.href=`https://wa.me/${c.whatsapp_number.replace(/\D/g,'')}`);
     const hero=media?.find(x=>x.section==='hero'); if(hero) document.querySelector('.hero')?.style.setProperty('background-image',`url("${getUrl(hero.file_path)}")`);
+    const logo=media?.find(x=>x.section==='logo');if(logo)document.querySelectorAll('.logo-image').forEach(img=>{img.src=getUrl(logo.file_path);img.alt=logo.alt_text||logo.title||'Office Design';});
     const banner=media?.find(x=>x.section==='banner'); if(banner){const img=document.querySelector('.about-banner-image');if(img){img.src=getUrl(banner.file_path);img.alt=banner.alt_text||banner.title||'Office Design';}}
     const gallery=document.querySelector('.gallery-track'); if(gallery){const items=media.filter(x=>x.section==='gallery');if(items.length)gallery.innerHTML=items.map(x=>`<div class="gallery-item"><img loading="lazy" class="lightbox-trigger reveal visible" src="${getUrl(x.file_path)}" alt="${escapeHtml(x.alt_text||x.title)}"></div>`).join('');}
     const reviews=document.querySelector('#testimonialTrack'); if(reviews){const items=media.filter(x=>x.section==='testimonials');if(items.length)reviews.innerHTML=items.map(x=>`<article class="review-shot"><img loading="lazy" class="lightbox-trigger" src="${getUrl(x.file_path)}" alt="${escapeHtml(x.alt_text||x.title)}"></article>`).join('');}
