@@ -5,6 +5,7 @@
   <title>Office Design | لوحة الإدارة</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="admin.css">
+  <style>.requests-table-wrap{width:100%;overflow-x:auto}.requests-table{width:100%;border-collapse:collapse;min-width:850px;font-size:12px}.requests-table th,.requests-table td{padding:11px 9px;text-align:right;border-bottom:1px solid var(--line);vertical-align:top}.requests-table th{color:var(--muted);background:#f8fafc;white-space:nowrap}.requests-table td:nth-child(6){white-space:pre-wrap;min-width:180px;max-width:260px}.request-status{border:1px solid var(--line);border-radius:8px;padding:6px;background:#fff;min-width:130px;font:inherit;font-size:11px}.request-empty{text-align:center!important;color:var(--muted);padding:25px!important}</style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="admin.js"></script>
 </head>
@@ -25,6 +26,7 @@
         <button class="nav-item" data-page="content">✎ <span>محتوى الموقع</span></button>
         <button class="nav-item" data-page="media">▧ <span>الصور والمعرض</span></button>
         <button class="nav-item" data-page="posts">▤ <span>المنشورات</span></button>
+        <button class="nav-item" data-page="requests">▣ <span>طلبات العملاء</span></button>
       </nav>
       <div class="sidebar-bottom"><a href="index.html" target="_blank">↗ معاينة الموقع</a><button id="logoutBtn" class="logout">تسجيل الخروج ←</button></div>
     </aside>
@@ -42,6 +44,18 @@
         <div class="panel"><div class="panel-head"><div><h3>مكتبة الصور</h3><p>يمكنك إخفاء الصورة أو حذفها نهائياً أو تغيير ترتيبها.</p></div><select id="mediaFilter"><option value="all">كل الأقسام</option><option value="gallery">المعرض</option><option value="hero">الواجهة</option><option value="banner">من نحن</option><option value="testimonials">آراء العملاء</option></select></div><div id="mediaGrid" class="media-grid"></div></div>
       </section>
       <section id="page-posts" class="page hidden"><div class="panel"><div class="panel-head"><div><h3 id="postFormTitle">إنشاء منشور</h3><p>أضف محتوى جديداً أو احفظه كمسودة قبل نشره.</p></div></div><form id="postForm" class="post-form"><input id="postId" type="hidden"><label>عنوان المنشور<input id="postTitle" required maxlength="160" placeholder="عنوان المنشور"></label><label>وصف مختصر<textarea id="postExcerpt" rows="2" placeholder="نبذة تظهر في بطاقة المنشور"></textarea></label><label>محتوى المنشور<textarea id="postBody" rows="5" placeholder="اكتب تفاصيل المنشور..."></textarea></label><label>صورة المنشور<input id="postImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label><label class="check"><input id="postPublished" type="checkbox"> نشر المنشور على الموقع</label><div class="form-actions"><button class="btn primary" type="submit">حفظ المنشور</button><button id="resetPost" class="btn secondary" type="button">منشور جديد</button></div></form><p id="postStatus" class="status"></p></div><div class="panel"><div class="panel-head"><div><h3>كل المنشورات</h3><p>تحكم في المسودات والمنشورات المنشورة.</p></div></div><div id="postsList" class="posts-list"></div></div></section>
+      <section id="page-requests" class="page hidden">
+        <div class="panel">
+          <div class="panel-head"><div><h3>طلبات العملاء</h3><p>طلبات نموذج التواصل الواردة من الموقع.</p></div><button id="refreshRequests" class="btn secondary" type="button">تحديث الطلبات</button></div>
+          <p id="requestsStatus" class="status" aria-live="polite"></p>
+          <div class="requests-table-wrap">
+            <table class="requests-table">
+              <thead><tr><th>التاريخ</th><th>العميل</th><th>الهاتف</th><th>البريد</th><th>نوع الخدمة</th><th>التفاصيل</th><th>الحالة</th></tr></thead>
+              <tbody id="requestsBody"><tr><td colspan="7">جارٍ تحميل الطلبات...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
       <footer>Office Design CMS <span>•</span> إدارة محتوى الموقع</footer>
     </main>
   </div>
