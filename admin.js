@@ -18,18 +18,50 @@ async function checkAdmin(user){const {data,error}=await db.from('admin_users').
 async function showApp(user){await checkAdmin(user);currentUser=user;$('userEmail').textContent=user.email;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');await refreshAll()}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='جارٍ التحقق...';const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){$('loginError').textContent=error.message;return}try{await showApp(data.user)}catch(err){$('loginError').textContent=err.message;await db.auth.signOut()}});
 $('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.reload()});
-const pageNames={overview:'نظرة عامة',content:'محتوى الموقع',media:'الصور والمعرض',posts:'المنشورات',requests:'طلبات العملاء'};
+const pageNames={overview:'نظرة عامة',content:'محتوى الموقع',media:'الصور والمعرض',posts:'المنشورات',requests:'طلبات العملاء',customers:'سجل العملاء'};
 function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));$('page-'+page).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));$('pageTitle').textContent=pageNames[page]}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 async function refreshAll(){await Promise.all([loadContent(),loadMedia(),loadPosts(),loadRequests()]);$('mediaCount').textContent=mediaRows.length;$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length}
 const requestStatuses=[['new','جديد'],['contacted','تم التواصل'],['scheduled','تم تحديد موعد'],['in_progress','قيد التنفيذ'],['completed','مكتمل'],['cancelled','ملغي']];
 async function loadRequests(){
   $('requestsStatus').textContent='جارٍ تحميل الطلبات...';
-  const {data,error}=await db.from('service_requests').select('id,customer_name,phone,email,service_type,description,status,estimated_cost,final_cost,admin_notes,created_at').order('created_at',{ascending:false}).limit(200);
+  const {data,error}=await db.from('service_requests').select('id,customer_name,phone,email,address,service_type,description,status,estimated_cost,final_cost,admin_notes,created_at').order('created_at',{ascending:false}).limit(200);
   if(error){$('requestsStatus').textContent='تعذر تحميل الطلبات: '+error.message;return}
-  requestRows=data||[];renderRequests();
+  requestRows=data||[];renderRequests();renderCustomers();
   $('requestsStatus').textContent='عدد الطلبات المعروضة: '+requestRows.length;
 }
+function customerIdentity(r){
+  const phone=String(r.phone||'').replace(/\\D/g,'');
+  if(phone)return 'phone:'+phone;
+  const email=String(r.email||'').trim().toLowerCase();
+  if(email)return 'email:'+email;
+  return 'name:'+String(r.customer_name||'').trim().toLowerCase();
+}
+function renderCustomers(){
+  const target=$('customersBody');if(!target)return;
+  const term=$('customerSearch').value.trim().toLowerCase();
+  const groups=new Map();
+  requestRows.forEach(r=>{
+    const key=customerIdentity(r);
+    if(!groups.has(key))groups.set(key,{key,name:r.customer_name||'—',phone:r.phone||'',email:r.email||'',address:r.address||'',requests:[],latest:r.created_at||''});
+    const c=groups.get(key);c.requests.push(r);
+    if(r.created_at&&(!c.latest||new Date(r.created_at)>new Date(c.latest)))c.latest=r.created_at;
+    if(!c.address&&r.address)c.address=r.address;
+    if(!c.email&&r.email)c.email=r.email;
+    if(!c.phone&&r.phone)c.phone=r.phone;
+  });
+  const customers=[...groups.values()].filter(c=>[c.name,c.phone,c.email,c.address].some(v=>String(v).toLowerCase().includes(term))).sort((a,b)=>new Date(b.latest||0)-new Date(a.latest||0));
+  $('customerTotal').textContent=groups.size;
+  $('customerRequestsTotal').textContent=requestRows.length;
+  if(!customers.length){target.innerHTML='<tr><td colspan="6" class="request-empty">لا يوجد عملاء مطابقون للبحث.</td></tr>';return}
+  target.innerHTML=customers.map(c=>'<tr><td>'+safe(c.name)+'</td><td><a href="tel:'+safe(c.phone)+'">'+safe(c.phone||'—')+'</a></td><td>'+safe(c.email||'—')+'</td><td>'+c.requests.length+'</td><td>'+safe(c.latest?new Date(c.latest).toLocaleDateString('ar-EG'):'—')+'</td><td><button class="mini" type="button" data-customer-requests="'+safe(c.key)+'">عرض الطلبات</button></td></tr>').join('');
+  target.querySelectorAll('[data-customer-requests]').forEach(button=>button.addEventListener('click',()=>{
+    const customer=groups.get(button.dataset.customerRequests);if(!customer)return;
+    $('requestSearch').value=customer.phone||customer.name;
+    $('requestStatusFilter').value='all';renderRequests();go('requests');
+  }));
+}
+$('customerSearch').addEventListener('input',renderCustomers);
 function updateRequestStats(){
   $('requestTotal').textContent=requestRows.length;
   $('requestNew').textContent=requestRows.filter(r=>r.status==='new').length;
