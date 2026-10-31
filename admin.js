@@ -10,7 +10,7 @@ const fields = [
   ['contact_email','البريد الإلكتروني','text'],['contact_address','العنوان','text'],
   ['whatsapp_number','رقم واتساب بصيغة دولية بدون +','text']
 ];
-let currentUser = null, mediaRows = [], postRows = [];
+let currentUser = null, mediaRows = [], postRows = [], requestRows = [];
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}
 function safe(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function publicUrl(path){return db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}
@@ -18,10 +18,37 @@ async function checkAdmin(user){const {data,error}=await db.from('admin_users').
 async function showApp(user){await checkAdmin(user);currentUser=user;$('userEmail').textContent=user.email;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');await refreshAll()}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='جارٍ التحقق...';const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){$('loginError').textContent=error.message;return}try{await showApp(data.user)}catch(err){$('loginError').textContent=err.message;await db.auth.signOut()}});
 $('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.reload()});
-const pageNames={overview:'نظرة عامة',content:'محتوى الموقع',media:'الصور والمعرض',posts:'المنشورات'};
+const pageNames={overview:'نظرة عامة',content:'محتوى الموقع',media:'الصور والمعرض',posts:'المنشورات',requests:'طلبات العملاء'};
 function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));$('page-'+page).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));$('pageTitle').textContent=pageNames[page]}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
-async function refreshAll(){await Promise.all([loadContent(),loadMedia(),loadPosts()]);$('mediaCount').textContent=mediaRows.length;$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length}
+async function refreshAll(){await Promise.all([loadContent(),loadMedia(),loadPosts(),loadRequests()]);$('mediaCount').textContent=mediaRows.length;$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length}
+const requestStatuses=[['new','جديد'],['in_progress','قيد التنفيذ'],['completed','مكتمل'],['cancelled','ملغي']];
+async function loadRequests(){
+  $('requestsStatus').textContent='جارٍ تحميل الطلبات...';
+  const {data,error}=await db.from('service_requests').select('id,customer_name,phone,email,service_type,description,status,created_at').order('created_at',{ascending:false}).limit(200);
+  if(error){$('requestsStatus').textContent='تعذر تحميل الطلبات: '+error.message;return}
+  requestRows=data||[];renderRequests();
+  $('requestsStatus').textContent='عدد الطلبات المعروضة: '+requestRows.length;
+}
+function renderRequests(){
+  const body=$('requestsBody');
+  if(!requestRows.length){body.innerHTML='<tr><td class="request-empty" colspan="7">لا توجد طلبات حتى الآن.</td></tr>';return}
+  body.innerHTML=requestRows.map(r=>{
+    const date=r.created_at?new Date(r.created_at).toLocaleString('ar-EG'):'—';
+    const options=requestStatuses.map(([value,label])=>'<option value="'+value+'" '+(r.status===value?'selected':'')+'>'+label+'</option>').join('');
+    return '<tr><td>'+safe(date)+'</td><td>'+safe(r.customer_name)+'</td><td><a href="tel:'+safe(r.phone)+'">'+safe(r.phone)+'</a></td><td>'+safe(r.email||'—')+'</td><td>'+safe(r.service_type||'—')+'</td><td>'+safe(r.description||'—')+'</td><td><select class="request-status" data-request-status="'+safe(r.id)+'">'+options+'</select></td></tr>';
+  }).join('');
+  body.querySelectorAll('[data-request-status]').forEach(select=>select.addEventListener('change',()=>updateRequestStatus(select.dataset.requestStatus,select.value,select)));
+}
+async function updateRequestStatus(id,status,select){
+  select.disabled=true;
+  const {error}=await db.from('service_requests').update({status,updated_at:new Date().toISOString()}).eq('id',id);
+  select.disabled=false;
+  if(error){toast('تعذر تحديث الحالة: '+error.message);const row=requestRows.find(x=>x.id===id);if(row)select.value=row.status;return}
+  const row=requestRows.find(x=>x.id===id);if(row)row.status=status;
+  toast('تم تحديث حالة الطلب');
+}
+$('refreshRequests').addEventListener('click',loadRequests);
 async function loadContent(){const {data,error}=await db.from('site_content').select('*');if(error)throw error;const values=Object.fromEntries((data||[]).map(r=>[r.key,r.value]));$('contentFields').innerHTML=fields.map(([key,label,type])=>`<label>${label}${type==='textarea'?`<textarea rows="3" data-key="${key}">${safe(values[key]||'')}</textarea>`:`<input data-key="${key}" value="${safe(values[key]||'')}">`}</label>`).join('')}
 $('saveContent').addEventListener('click',async()=>{const rows=[...document.querySelectorAll('[data-key]')].map(el=>({key:el.dataset.key,value:el.value,updated_by:currentUser.id,updated_at:new Date().toISOString()}));const {error}=await db.from('site_content').upsert(rows,{onConflict:'key'});$('contentStatus').textContent=error?error.message:'تم حفظ التعديلات بنجاح.';if(!error)toast('تم حفظ محتوى الموقع')});
 async function loadMedia(){const {data,error}=await db.from('media_items').select('*').order('section').order('sort_order');if(error)throw error;mediaRows=data||[];renderMedia()}
