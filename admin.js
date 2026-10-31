@@ -49,11 +49,43 @@ function renderRequests(){
   body.innerHTML=filtered.map(r=>{
     const date=r.created_at?new Date(r.created_at).toLocaleString('ar-EG'):'—';
     const options=requestStatuses.map(([value,label])=>'<option value="'+value+'" '+(r.status===value?'selected':'')+'>'+label+'</option>').join('');
-    return '<tr><td>'+safe(date)+'</td><td>'+safe(r.customer_name)+'</td><td><a href="tel:'+safe(r.phone)+'">'+safe(r.phone)+'</a></td><td>'+safe(r.email||'—')+'</td><td>'+safe(r.service_type||'—')+'</td><td>'+safe(r.description||'—')+'</td><td><select class="request-status" data-request-status="'+safe(r.id)+'">'+options+'</select></td><td><input class="request-cost" type="number" min="0" step="0.01" placeholder="تقديرية" value="'+(r.estimated_cost??'')+'" data-req-est="'+safe(r.id)+'"></td><td><input class="request-cost" type="number" min="0" step="0.01" placeholder="نهائية" value="'+(r.final_cost??'')+'" data-req-final="'+safe(r.id)+'"></td><td><textarea class="request-notes" rows="2" placeholder="ملاحظات داخلية" data-req-notes="'+safe(r.id)+'">'+safe(r.admin_notes||'')+'</textarea></td><td><button class="mini" type="button" data-save-request="'+safe(r.id)+'">حفظ</button></td></tr>';
+    return '<tr><td>'+safe(date)+'</td><td>'+safe(r.customer_name)+'</td><td><a href="tel:'+safe(r.phone)+'">'+safe(r.phone)+'</a></td><td>'+safe(r.email||'—')+'</td><td>'+safe(r.service_type||'—')+'</td><td>'+safe(r.description||'—')+'</td><td><select class="request-status" data-request-status="'+safe(r.id)+'">'+options+'</select></td><td><input class="request-cost" type="number" min="0" step="0.01" placeholder="تقديرية" value="'+(r.estimated_cost??'')+'" data-req-est="'+safe(r.id)+'"></td><td><input class="request-cost" type="number" min="0" step="0.01" placeholder="نهائية" value="'+(r.final_cost??'')+'" data-req-final="'+safe(r.id)+'"></td><td><textarea class="request-notes" rows="2" placeholder="ملاحظات داخلية" data-req-notes="'+safe(r.id)+'">'+safe(r.admin_notes||'')+'</textarea></td><td><button class="mini" type="button" data-save-request="'+safe(r.id)+'">حفظ</button> <button class="mini" type="button" data-view-request="'+safe(r.id)+'">تفاصيل</button></td></tr>';
   }).join('');
   body.querySelectorAll('[data-request-status]').forEach(select=>select.addEventListener('change',()=>updateRequestStatus(select.dataset.requestStatus,select.value,select)));
   body.querySelectorAll('[data-save-request]').forEach(button=>button.addEventListener('click',()=>saveRequestDetails(button.dataset.saveRequest,button)));
+  body.querySelectorAll('[data-view-request]').forEach(button=>button.addEventListener('click',()=>showRequestDetails(button.dataset.viewRequest)));
 }
+function showRequestDetails(id){
+  const r=requestRows.find(x=>String(x.id)===String(id));if(!r)return;
+  const statusLabel=(requestStatuses.find(x=>x[0]===r.status)||['','غير محدد'])[1];
+  const date=r.created_at?new Date(r.created_at).toLocaleString('ar-EG'):'—';
+  const item=(label,value,wide=false)=>'<div class="request-detail-item'+(wide?' request-detail-wide':'')+'"><small>'+safe(label)+'</small><p>'+safe(value||'—')+'</p></div>';
+  $('requestDetailContent').innerHTML='<div class="request-detail-grid">'+
+    item('رقم الطلب',r.id)+item('تاريخ الاستلام',date)+
+    item('اسم العميل',r.customer_name)+item('رقم الهاتف',r.phone)+
+    item('البريد الإلكتروني',r.email)+item('نوع الخدمة',r.service_type)+
+    item('الحالة',statusLabel)+item('التكلفة التقديرية',r.estimated_cost==null?'غير محددة':r.estimated_cost+' جنيه')+
+    item('التكلفة النهائية',r.final_cost==null?'غير محددة':r.final_cost+' جنيه')+
+    item('تفاصيل الطلب',r.description,true)+item('ملاحظات داخلية',r.admin_notes,true)+
+    '</div>';
+  $('requestDetailModal').dataset.requestId=String(id);
+  $('requestDetailModal').classList.remove('hidden');
+}
+function closeRequestDetails(){$('requestDetailModal').classList.add('hidden')}
+$('closeRequestDetail').addEventListener('click',closeRequestDetails);
+$('closeRequestDetailBottom').addEventListener('click',closeRequestDetails);
+$('requestDetailModal').addEventListener('click',e=>{if(e.target===$('requestDetailModal'))closeRequestDetails()});
+$('printRequest').addEventListener('click',()=>{
+  const id=$('requestDetailModal').dataset.requestId;
+  const r=requestRows.find(x=>String(x.id)===String(id));if(!r)return;
+  const statusLabel=(requestStatuses.find(x=>x[0]===r.status)||['','غير محدد'])[1];
+  const date=r.created_at?new Date(r.created_at).toLocaleString('ar-EG'):'—';
+  const rows=[['رقم الطلب',r.id],['التاريخ',date],['اسم العميل',r.customer_name],['الهاتف',r.phone],['البريد الإلكتروني',r.email],['نوع الخدمة',r.service_type],['الحالة',statusLabel],['التكلفة التقديرية',r.estimated_cost==null?'غير محددة':r.estimated_cost+' جنيه'],['التكلفة النهائية',r.final_cost==null?'غير محددة':r.final_cost+' جنيه'],['تفاصيل الطلب',r.description],['ملاحظات داخلية',r.admin_notes]];
+  const popup=window.open('','_blank','width=850,height=700');
+  if(!popup){toast('اسمح بالنوافذ المنبثقة لإتمام الطباعة');return}
+  popup.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>أمر شغل - Office Design</title><style>body{font-family:Arial,sans-serif;padding:32px;color:#18263a}h1{text-align:center;color:#102f55}p.sub{text-align:center;color:#667}table{width:100%;border-collapse:collapse;margin-top:25px}td{border:1px solid #dce2e9;padding:12px;vertical-align:top}td:first-child{width:28%;font-weight:bold;background:#f4f6fa}.sign{display:flex;justify-content:space-between;margin-top:55px}@media print{body{padding:10mm}}</style></head><body><h1>Office Design</h1><p class="sub">أمر شغل / تفاصيل طلب عميل</p><table>'+rows.map(([k,v])=>'<tr><td>'+safe(k)+'</td><td>'+safe(v||'—')+'</td></tr>').join('')+'</table><div class="sign"><span>توقيع العميل: ....................</span><span>توقيع المسؤول: ....................</span></div><script>window.onload=()=>window.print()</script></body></html>');
+  popup.document.close();
+});
 async function saveRequestDetails(id,button){
   const estimated=$('requestsBody').querySelector('[data-req-est="'+id+'"]').value;
   const finalCost=$('requestsBody').querySelector('[data-req-final="'+id+'"]').value;
