@@ -3,13 +3,7 @@ const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Cb_uRCVqJk1x3drkGuuTwQ__a4aOha1
 const BUCKET = 'office-media';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 const $ = (id) => document.getElementById(id);
-const fields = [
-  ['hero_title','عنوان الواجهة الرئيسية','text'],['hero_description','وصف الواجهة الرئيسية','textarea'],
-  ['about_title','عنوان من نحن','text'],['about_description','وصف من نحن','textarea'],
-  ['services_title','عنوان الخدمات','text'],['contact_phone','رقم الهاتف','text'],
-  ['contact_email','البريد الإلكتروني','text'],['contact_address','العنوان','text'],
-  ['whatsapp_number','رقم واتساب بصيغة دولية بدون +','text']
-];
+const fields = [["hero_title","عنوان الواجهة الرئيسية","text"],["hero_description","وصف الواجهة الرئيسية","textarea"],["hero_cta_primary","زر الواجهة الرئيسي","text"],["hero_cta_secondary","زر الواجهة الثانوي","text"],["stats_number_1","الرقم الإحصائي الأول","text"],["stats_label_1","وصف الرقم الإحصائي الأول","text"],["stats_number_2","الرقم الإحصائي الثاني","text"],["stats_label_2","وصف الرقم الإحصائي الثاني","text"],["stats_number_3","الرقم الإحصائي الثالث","text"],["stats_label_3","وصف الرقم الإحصائي الثالث","text"],["about_title","عنوان من نحن","text"],["about_description","وصف من نحن","textarea"],["about_card_title_1","عنوان بطاقة من نحن 1","text"],["about_card_description_1","وصف بطاقة من نحن 1","textarea"],["about_card_title_2","عنوان بطاقة من نحن 2","text"],["about_card_description_2","وصف بطاقة من نحن 2","textarea"],["about_card_title_3","عنوان بطاقة من نحن 3","text"],["about_card_description_3","وصف بطاقة من نحن 3","textarea"],["about_card_title_4","عنوان بطاقة من نحن 4","text"],["about_card_description_4","وصف بطاقة من نحن 4","textarea"],["services_title","عنوان قسم الخدمات","text"],["service_1","اسم الخدمة 1","text"],["service_2","اسم الخدمة 2","text"],["service_3","اسم الخدمة 3","text"],["service_4","اسم الخدمة 4","text"],["service_5","اسم الخدمة 5","text"],["service_6","اسم الخدمة 6","text"],["service_7","اسم الخدمة 7","text"],["service_8","اسم الخدمة 8","text"],["service_9","اسم الخدمة 9","text"],["service_10","اسم الخدمة 10","text"],["service_11","اسم الخدمة 11","text"],["service_12","اسم الخدمة 12","text"],["service_13","اسم الخدمة 13","text"],["service_14","اسم الخدمة 14","text"],["service_15","اسم الخدمة 15","text"],["service_16","اسم الخدمة 16","text"],["why_title","عنوان لماذا نحن","text"],["why_feature_1","ميزة 1","text"],["why_feature_2","ميزة 2","text"],["why_feature_3","ميزة 3","text"],["why_feature_4","ميزة 4","text"],["why_feature_5","ميزة 5","text"],["why_feature_6","ميزة 6","text"],["why_feature_7","ميزة 7","text"],["why_feature_8","ميزة 8","text"],["why_feature_9","ميزة 9","text"],["why_feature_10","ميزة 10","text"],["why_feature_11","ميزة 11","text"],["gallery_title","عنوان معرض الصور","text"],["how_title","عنوان آلية العمل","text"],["how_step_1","خطوة العمل الأولى","text"],["how_step_2","خطوة العمل الثانية","text"],["testimonials_title","عنوان آراء العملاء","text"],["contact_title","عنوان التواصل","text"],["contact_phone","رقم الهاتف","text"],["contact_email","البريد الإلكتروني","text"],["contact_address","العنوان","text"],["whatsapp_number","رقم واتساب بصيغة دولية بدون +","text"],["footer_description","وصف أسفل الموقع","textarea"],["footer_quick_title","عنوان الروابط السريعة","text"],["footer_social_title","عنوان روابط التواصل الاجتماعي","text"],["footer_social_text","روابط التواصل الاجتماعي المعروضة","text"],["footer_copyright","نص حقوق النشر أسفل الموقع","text"]];
 let currentUser = null, mediaRows = [], postRows = [], requestRows = [];
 let requestRealtimeChannel = null, alertAudio = null, alertSoundEnabled = false;
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),4200)}
@@ -118,7 +112,7 @@ function startRequestRealtime(){
     });
 }
 function safe(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function publicUrl(path){return db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}
+function publicUrl(path){return /^(photo|screan)\//.test(path)?'/'+path:db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}
 async function checkAdmin(user){const {data,error}=await db.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();if(error||!data)throw new Error('هذا الحساب ليس ضمن قائمة مديري الموقع. اطلب إضافة حسابك إلى جدول admin_users.');return true}
 async function showApp(user){await checkAdmin(user);currentUser=user;$('userEmail').textContent=user.email;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');await refreshAll();startRequestRealtime();refreshPushButton()}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='جارٍ التحقق...';const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){$('loginError').textContent=error.message;return}try{await showApp(data.user)}catch(err){$('loginError').textContent=err.message;await db.auth.signOut()}});
@@ -319,11 +313,34 @@ $('seoForm').addEventListener('submit',async e=>{
 
 $('saveContent').addEventListener('click',async()=>{const rows=[...document.querySelectorAll('[data-key]')].map(el=>({key:el.dataset.key,value:el.value,updated_by:currentUser.id,updated_at:new Date().toISOString()}));const {error}=await db.from('site_content').upsert(rows,{onConflict:'key'});$('contentStatus').textContent=error?error.message:'تم حفظ التعديلات بنجاح.';if(!error)toast('تم حفظ محتوى الموقع')});
 async function loadMedia(){const {data,error}=await db.from('media_items').select('*').order('section').order('sort_order');if(error)throw error;mediaRows=data||[];renderMedia()}
-function renderMedia(){const filter=$('mediaFilter').value;const list=mediaRows.filter(m=>filter==='all'||m.section===filter);$('mediaGrid').innerHTML=list.map(m=>`<article class="media-card"><img src="${safe(publicUrl(m.file_path))}" alt="${safe(m.alt_text)}"><div class="meta"><b>${safe(m.title||'صورة بدون عنوان')}</b><small>${safe(m.section)} · ${m.is_published?'ظاهرة':'مخفية'} · ترتيب ${m.sort_order}</small></div><div class="media-actions"><button class="mini" data-toggle-media="${m.id}">${m.is_published?'إخفاء':'إظهار'}</button><button class="mini danger" data-delete-media="${m.id}">حذف</button></div></article>`).join('')||'<p class="muted">لا توجد صور في هذا القسم حتى الآن.</p>';document.querySelectorAll('[data-toggle-media]').forEach(b=>b.onclick=()=>toggleMedia(b.dataset.toggleMedia));document.querySelectorAll('[data-delete-media]').forEach(b=>b.onclick=()=>deleteMedia(b.dataset.deleteMedia))}
-$('mediaFilter').addEventListener('change',renderMedia);
-$('mediaForm').addEventListener('submit',async e=>{e.preventDefault();const file=$('mediaFile').files[0];if(!file)return;if(file.size>10*1024*1024){$('mediaStatus').textContent='حجم الصورة أكبر من 10 ميجابايت.';return}const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');const path=`${$('mediaSection').value}/${crypto.randomUUID()}.${ext}`;$('mediaStatus').textContent='جارٍ رفع الصورة...';const up=await db.storage.from(BUCKET).upload(path,file,{contentType:file.type,upsert:false});if(up.error){$('mediaStatus').textContent=up.error.message;return}const {error}=await db.from('media_items').insert({section:$('mediaSection').value,file_path:path,title:$('mediaTitle').value,alt_text:$('mediaAlt').value,created_by:currentUser.id});if(error){await db.storage.from(BUCKET).remove([path]);$('mediaStatus').textContent=error.message;return}$('mediaForm').reset();$('mediaStatus').textContent='تم رفع الصورة وإضافتها للمكتبة.';await loadMedia();$('mediaCount').textContent=mediaRows.length;toast('تم رفع الصورة بنجاح')});
-async function toggleMedia(id){const m=mediaRows.find(x=>x.id===id);const {error}=await db.from('media_items').update({is_published:!m.is_published}).eq('id',id);if(error)return toast(error.message);await loadMedia()}
-async function deleteMedia(id){if(!confirm('هل تريد حذف الصورة نهائياً؟'))return;const m=mediaRows.find(x=>x.id===id);const {error}=await db.from('media_items').delete().eq('id',id);if(error)return toast(error.message);await db.storage.from(BUCKET).remove([m.file_path]);await loadMedia();$('mediaCount').textContent=mediaRows.length;toast('تم حذف الصورة')}
+function renderMedia(){
+  const filter=$('mediaFilter').value;
+  const list=mediaRows.filter(m=>filter==='all'||m.section===filter);
+  const sectionNames={hero:'الواجهة الرئيسية',banner:'من نحن',gallery:'معرض الصور',testimonials:'آراء العملاء',logo:'الشعار'};
+  $('mediaGrid').innerHTML=list.map(m=>`<article class="media-card">
+    <img src="${safe(publicUrl(m.file_path))}" alt="${safe(m.alt_text)}">
+    <div class="meta"><small>${safe(sectionNames[m.section]||m.section)} · ${m.is_published?'ظاهرة':'مخفية'}</small>
+      <label>اسم الصورة<input data-media-title="${m.id}" value="${safe(m.title||'')}" maxlength="140"></label>
+      <label>الوصف البديل<input data-media-alt="${m.id}" value="${safe(m.alt_text||'')}" maxlength="250"></label>
+      <label>الترتيب<input data-media-order="${m.id}" type="number" min="0" step="1" value="${m.sort_order||0}"></label>
+    </div>
+    <div class="media-actions"><button class="mini" data-save-media="${m.id}">حفظ التفاصيل</button><button class="mini" data-toggle-media="${m.id}">${m.is_published?'إخفاء':'إظهار'}</button><button class="mini danger" data-delete-media="${m.id}">حذف</button></div>
+  </article>`).join('')||'<p class="muted">لا توجد صور في هذا القسم حتى الآن.</p>';
+  document.querySelectorAll('[data-save-media]').forEach(b=>b.onclick=()=>saveMediaDetails(b.dataset.saveMedia,b));
+  document.querySelectorAll('[data-toggle-media]').forEach(b=>b.onclick=()=>toggleMedia(b.dataset.toggleMedia));
+  document.querySelectorAll('[data-delete-media]').forEach(b=>b.onclick=()=>deleteMedia(b.dataset.deleteMedia));
+}
+async function saveMediaDetails(id,button){
+  const row=mediaRows.find(x=>x.id===id);if(!row)return;
+  const title=document.querySelector('[data-media-title="'+id+'"]').value.trim();
+  const alt_text=document.querySelector('[data-media-alt="'+id+'"]').value.trim();
+  const sort_order=Math.max(0,Number(document.querySelector('[data-media-order="'+id+'"]').value)||0);
+  button.disabled=true;
+  const {error}=await db.from('media_items').update({title,alt_text,sort_order}).eq('id',id);
+  button.disabled=false;
+  if(error){toast('تعذر حفظ بيانات الصورة: '+error.message);return}
+  Object.assign(row,{title,alt_text,sort_order});toast('تم حفظ بيانات الصورة');await loadMedia();
+}
 async function loadPosts(){const {data,error}=await db.from('posts').select('*').order('created_at',{ascending:false});if(error)throw error;postRows=data||[];renderPosts()}
 function renderPosts(){$('postsList').innerHTML=postRows.map(p=>`<article class="post-row"><img src="${p.image_path?safe(publicUrl(p.image_path)):''}" alt=""><div class="info"><b>${safe(p.title)}</b><small>${new Date(p.created_at).toLocaleDateString('ar-EG')} · ${safe(p.excerpt)}</small></div><span class="pill ${p.is_published?'':'draft'}">${p.is_published?'منشور':'مسودة'}</span><button class="mini" data-edit-post="${p.id}">تعديل</button><button class="mini danger" data-delete-post="${p.id}">حذف</button></article>`).join('')||'<p class="muted">لا توجد منشورات حتى الآن.</p>';document.querySelectorAll('[data-edit-post]').forEach(b=>b.onclick=()=>editPost(b.dataset.editPost));document.querySelectorAll('[data-delete-post]').forEach(b=>b.onclick=()=>deletePost(b.dataset.deletePost))}
 function clearPost(){$('postForm').reset();$('postId').value='';$('postFormTitle').textContent='إنشاء منشور'}$('resetPost').onclick=clearPost;
