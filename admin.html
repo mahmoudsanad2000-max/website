@@ -5,7 +5,7 @@
   <title>Office Design | لوحة الإدارة</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="admin.css">
-  <style>.requests-table-wrap{width:100%;overflow-x:auto}.requests-table{width:100%;border-collapse:collapse;min-width:850px;font-size:12px}.requests-table th,.requests-table td{padding:11px 9px;text-align:right;border-bottom:1px solid var(--line);vertical-align:top}.requests-table th{color:var(--muted);background:#f8fafc;white-space:nowrap}.requests-table td:nth-child(6){white-space:pre-wrap;min-width:180px;max-width:260px}.request-status{border:1px solid var(--line);border-radius:8px;padding:6px;background:#fff;min-width:130px;font:inherit;font-size:11px}.request-empty{text-align:center!important;color:var(--muted);padding:25px!important}</style>
+  <style>.requests-table-wrap{width:100%;overflow-x:auto}.requests-table{width:100%;border-collapse:collapse;min-width:850px;font-size:12px}.requests-table th,.requests-table td{padding:11px 9px;text-align:right;border-bottom:1px solid var(--line);vertical-align:top}.requests-table th{color:var(--muted);background:#f8fafc;white-space:nowrap}.requests-table td:nth-child(6){white-space:pre-wrap;min-width:180px;max-width:260px}.request-status{border:1px solid var(--line);border-radius:8px;padding:6px;background:#fff;min-width:130px;font:inherit;font-size:11px}.request-cost{width:105px;border:1px solid var(--line);border-radius:8px;padding:7px;font:inherit;font-size:11px}.request-notes{width:170px;border:1px solid var(--line);border-radius:8px;padding:7px;font:inherit;font-size:11px;resize:vertical}.request-empty{text-align:center!important;color:var(--muted);padding:25px!important}</style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="admin.js"></script>
 </head>
@@ -50,7 +50,7 @@
           <p id="requestsStatus" class="status" aria-live="polite"></p>
           <div class="requests-table-wrap">
             <table class="requests-table">
-              <thead><tr><th>التاريخ</th><th>العميل</th><th>الهاتف</th><th>البريد</th><th>نوع الخدمة</th><th>التفاصيل</th><th>الحالة</th></tr></thead>
+              <thead><tr><th>التاريخ</th><th>العميل</th><th>الهاتف</th><th>البريد</th><th>نوع الخدمة</th><th>التفاصيل</th><th>الحالة</th><th>تكلفة تقديرية</th><th>تكلفة نهائية</th><th>ملاحظات داخلية</th><th>إجراء</th></tr></thead>
               <tbody id="requestsBody"><tr><td colspan="7">جارٍ تحميل الطلبات...</td></tr></tbody>
             </table>
           </div>
