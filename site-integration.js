@@ -7,6 +7,20 @@
   const client = window.supabase.createClient(URL, KEY);
   const getUrl = path => client.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
   const text = (selector, value) => { const el=document.querySelector(selector); if(el && value) el.textContent=value; };
+  function setMeta(selector, attribute, value, content){
+    if(!content)return;
+    let element=document.querySelector(selector);
+    if(!element){element=document.createElement('meta');element.setAttribute(attribute,value);document.head.appendChild(element);}
+    element.setAttribute('content',content);
+  }
+  function applySeoSettings(settings){
+    if(settings.seo_title){document.title=settings.seo_title;setMeta('meta[property="og:title"]','property','og:title',settings.seo_title);setMeta('meta[name="twitter:title"]','name','twitter:title',settings.seo_title);}
+    if(settings.seo_description){setMeta('meta[name="description"]','name','description',settings.seo_description);setMeta('meta[property="og:description"]','property','og:description',settings.seo_description);setMeta('meta[name="twitter:description"]','name','twitter:description',settings.seo_description);}
+    if(settings.seo_keywords)setMeta('meta[name="keywords"]','name','keywords',settings.seo_keywords);
+    setMeta('meta[property="og:type"]','property','og:type','website');
+    setMeta('meta[property="og:url"]','property','og:url',window.location.href.split('#')[0]);
+    setMeta('meta[name="twitter:card"]','name','twitter:card','summary_large_image');
+  }
   async function init(){
     const [{data:content,error:cErr},{data:media,error:mErr},{data:posts,error:pErr}] = await Promise.all([
       client.from('site_content').select('key,value'),
@@ -15,6 +29,7 @@
     ]);
     if(cErr||mErr||pErr) { console.warn('Office Design CMS: using original page content.',cErr||mErr||pErr); return; }
     const c=Object.fromEntries((content||[]).map(x=>[x.key,x.value]));
+    applySeoSettings(c);
     text('.hero h1',c.hero_title); text('.hero-content > p',c.hero_description);
     text('#about h2',c.about_title); text('#about > .container > p',c.about_description);
     text('#services h2',c.services_title);
