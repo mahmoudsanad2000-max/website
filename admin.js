@@ -341,6 +341,14 @@ async function saveMediaDetails(id,button){
   if(error){toast('تعذر حفظ بيانات الصورة: '+error.message);return}
   Object.assign(row,{title,alt_text,sort_order});toast('تم حفظ بيانات الصورة');await loadMedia();
 }
+async function deleteMedia(id){
+  if(!confirm('هل تريد حذف الصورة من الموقع ومكتبة الصور؟'))return;
+  const m=mediaRows.find(x=>x.id===id);if(!m)return;
+  const {error}=await db.from('media_items').delete().eq('id',id);
+  if(error)return toast('تعذر حذف الصورة: '+error.message);
+  if(!(m.file_path.startsWith('photo/')||m.file_path.startsWith('screan/')))await db.storage.from(BUCKET).remove([m.file_path]);
+  await loadMedia();$('mediaCount').textContent=mediaRows.length;toast('تم حذف الصورة من الموقع');
+}
 async function loadPosts(){const {data,error}=await db.from('posts').select('*').order('created_at',{ascending:false});if(error)throw error;postRows=data||[];renderPosts()}
 function renderPosts(){$('postsList').innerHTML=postRows.map(p=>`<article class="post-row"><img src="${p.image_path?safe(publicUrl(p.image_path)):''}" alt=""><div class="info"><b>${safe(p.title)}</b><small>${new Date(p.created_at).toLocaleDateString('ar-EG')} · ${safe(p.excerpt)}</small></div><span class="pill ${p.is_published?'':'draft'}">${p.is_published?'منشور':'مسودة'}</span><button class="mini" data-edit-post="${p.id}">تعديل</button><button class="mini danger" data-delete-post="${p.id}">حذف</button></article>`).join('')||'<p class="muted">لا توجد منشورات حتى الآن.</p>';document.querySelectorAll('[data-edit-post]').forEach(b=>b.onclick=()=>editPost(b.dataset.editPost));document.querySelectorAll('[data-delete-post]').forEach(b=>b.onclick=()=>deletePost(b.dataset.deletePost))}
 function clearPost(){$('postForm').reset();$('postId').value='';$('postFormTitle').textContent='إنشاء منشور'}$('resetPost').onclick=clearPost;
