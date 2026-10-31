@@ -6,6 +6,23 @@
   const BUCKET = 'office-media';
   const client = window.supabase.createClient(URL, KEY);
   const getUrl = path => client.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  function trackWebsiteVisit(){
+    try{
+      let visitorId=localStorage.getItem('office_design_visitor_id');
+      if(!visitorId){
+        visitorId=crypto.randomUUID();
+        localStorage.setItem('office_design_visitor_id',visitorId);
+      }
+      let referrer=null;
+      try{if(document.referrer)referrer=new URL(document.referrer).origin;}catch(_){}
+      client.from('site_visits').insert({
+        visitor_id:visitorId,
+        page_path:window.location.pathname||'/',
+        referrer
+      }).then(({error})=>{if(error)console.warn('Office Design analytics:',error.message)});
+    }catch(error){console.warn('Office Design analytics unavailable:',error)}
+  }
+  trackWebsiteVisit();
   const text = (selector, value) => { const el=document.querySelector(selector); if(el && value) el.textContent=value; };
   function setMeta(selector, attribute, value, content){
     if(!content)return;
