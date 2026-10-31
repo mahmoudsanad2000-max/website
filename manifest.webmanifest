@@ -1,0 +1,30 @@
+{
+  "id": "/admin.html",
+  "name": "Office Design Admin",
+  "short_name": "Office Admin",
+  "description": "لوحة إدارة شركة Office Design",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/admin.html",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#f4f6fa",
+  "theme_color": "#142b4a",
+  "orientation": "any",
+  "categories": [
+    "business",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
