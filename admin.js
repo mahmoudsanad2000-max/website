@@ -25,20 +25,34 @@ async function refreshAll(){await Promise.all([loadContent(),loadMedia(),loadPos
 const requestStatuses=[['new','جديد'],['contacted','تم التواصل'],['scheduled','تم تحديد موعد'],['in_progress','قيد التنفيذ'],['completed','مكتمل'],['cancelled','ملغي']];
 async function loadRequests(){
   $('requestsStatus').textContent='جارٍ تحميل الطلبات...';
-  const {data,error}=await db.from('service_requests').select('id,customer_name,phone,email,service_type,description,status,created_at').order('created_at',{ascending:false}).limit(200);
+  const {data,error}=await db.from('service_requests').select('id,customer_name,phone,email,service_type,description,status,estimated_cost,final_cost,admin_notes,created_at').order('created_at',{ascending:false}).limit(200);
   if(error){$('requestsStatus').textContent='تعذر تحميل الطلبات: '+error.message;return}
   requestRows=data||[];renderRequests();
   $('requestsStatus').textContent='عدد الطلبات المعروضة: '+requestRows.length;
 }
 function renderRequests(){
   const body=$('requestsBody');
-  if(!requestRows.length){body.innerHTML='<tr><td class="request-empty" colspan="7">لا توجد طلبات حتى الآن.</td></tr>';return}
+  if(!requestRows.length){body.innerHTML='<tr><td class="request-empty" colspan="11">لا توجد طلبات حتى الآن.</td></tr>';return}
   body.innerHTML=requestRows.map(r=>{
     const date=r.created_at?new Date(r.created_at).toLocaleString('ar-EG'):'—';
     const options=requestStatuses.map(([value,label])=>'<option value="'+value+'" '+(r.status===value?'selected':'')+'>'+label+'</option>').join('');
-    return '<tr><td>'+safe(date)+'</td><td>'+safe(r.customer_name)+'</td><td><a href="tel:'+safe(r.phone)+'">'+safe(r.phone)+'</a></td><td>'+safe(r.email||'—')+'</td><td>'+safe(r.service_type||'—')+'</td><td>'+safe(r.description||'—')+'</td><td><select class="request-status" data-request-status="'+safe(r.id)+'">'+options+'</select></td></tr>';
+    return '<tr><td>'+safe(date)+'</td><td>'+safe(r.customer_name)+'</td><td><a href="tel:'+safe(r.phone)+'">'+safe(r.phone)+'</a></td><td>'+safe(r.email||'—')+'</td><td>'+safe(r.service_type||'—')+'</td><td>'+safe(r.description||'—')+'</td><td><select class="request-status" data-request-status="'+safe(r.id)+'">'+options+'</select></td><td><input class="request-cost" type="number" min="0" step="0.01" placeholder="تقديرية" value="'+(r.estimated_cost??'')+'" data-req-est="'+safe(r.id)+'"></td><td><input class="request-cost" type="number" min="0" step="0.01" placeholder="نهائية" value="'+(r.final_cost??'')+'" data-req-final="'+safe(r.id)+'"></td><td><textarea class="request-notes" rows="2" placeholder="ملاحظات داخلية" data-req-notes="'+safe(r.id)+'">'+safe(r.admin_notes||'')+'</textarea></td><td><button class="mini" type="button" data-save-request="'+safe(r.id)+'">حفظ</button></td></tr>';
   }).join('');
   body.querySelectorAll('[data-request-status]').forEach(select=>select.addEventListener('change',()=>updateRequestStatus(select.dataset.requestStatus,select.value,select)));
+  body.querySelectorAll('[data-save-request]').forEach(button=>button.addEventListener('click',()=>saveRequestDetails(button.dataset.saveRequest,button)));
+}
+async function saveRequestDetails(id,button){
+  const estimated=$('requestsBody').querySelector('[data-req-est="'+id+'"]').value;
+  const finalCost=$('requestsBody').querySelector('[data-req-final="'+id+'"]').value;
+  const notes=$('requestsBody').querySelector('[data-req-notes="'+id+'"]').value;
+  if((estimated!==''&&(!Number.isFinite(Number(estimated))||Number(estimated)<0))||(finalCost!==''&&(!Number.isFinite(Number(finalCost))||Number(finalCost)<0))){toast('أدخل تكلفة صحيحة غير سالبة');return}
+  button.disabled=true;
+  const payload={estimated_cost:estimated===''?null:Number(estimated),final_cost:finalCost===''?null:Number(finalCost),admin_notes:notes,updated_at:new Date().toISOString()};
+  const {error}=await db.from('service_requests').update(payload).eq('id',id);
+  button.disabled=false;
+  if(error){toast('تعذر حفظ بيانات الطلب: '+error.message);return}
+  const row=requestRows.find(x=>x.id===id);if(row)Object.assign(row,payload);
+  toast('تم حفظ التكلفة والملاحظات');
 }
 async function updateRequestStatus(id,status,select){
   select.disabled=true;
