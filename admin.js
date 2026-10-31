@@ -73,6 +73,7 @@ async function updateRequestStatus(id,status,select){
   select.disabled=false;
   if(error){toast('تعذر تحديث الحالة: '+error.message);const row=requestRows.find(x=>x.id===id);if(row)select.value=row.status;return}
   const row=requestRows.find(x=>x.id===id);if(row)row.status=status;
+  updateRequestStats();
   toast('تم تحديث حالة الطلب');
 }
 $('requestSearch').addEventListener('input',renderRequests);
