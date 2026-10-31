@@ -5,7 +5,7 @@
   const KEY = 'sb_publishable_Cb_uRCVqJk1x3drkGuuTwQ__a4aOha1';
   const BUCKET = 'office-media';
   const client = window.supabase.createClient(URL, KEY);
-  const getUrl = path => /^(photo|screan)\\//.test(path) ? '/'+path : client.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  const getUrl = path => (path.startsWith('photo/') || path.startsWith('screan/')) ? '/'+path : client.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
   function trackWebsiteVisit(){
     try{
       let visitorId=localStorage.getItem('office_design_visitor_id');
