@@ -1048,3 +1048,144 @@ body {
     box-shadow: 0 9px 20px rgba(4,18,35,.17);
   }
 }
+
+
+/* Office Design luxury palette and interaction refinement */
+:root {
+  --primary: #4b3025;
+  --primary-2: #70503b;
+  --accent: #c49a50;
+  --accent-soft: #ead5a7;
+  --bg: #fbf8f2;
+  --bg-soft: #f1e9dc;
+  --text: #33271f;
+  --text-soft: #75685c;
+  --card: #fffdf9;
+  --border: #e3d7c7;
+  --ring: rgba(196, 154, 80, .28);
+  --shadow: 0 16px 42px rgba(61, 39, 25, .12);
+  --shadow-soft: 0 9px 24px rgba(61, 39, 25, .08);
+  --od-gold-glow: 0 16px 38px rgba(196, 154, 80, .2);
+}
+body.dark {
+  --primary: #e7c98e;
+  --primary-2: #d2aa68;
+  --accent: #d4ad68;
+  --accent-soft: #efd9aa;
+  --bg: #17120f;
+  --bg-soft: #211914;
+  --text: #f5eee5;
+  --text-soft: #c7b8a7;
+  --card: #261e18;
+  --border: #49382b;
+  --ring: rgba(212, 173, 104, .32);
+  --shadow: 0 18px 46px rgba(0, 0, 0, .38);
+  --shadow-soft: 0 9px 25px rgba(0, 0, 0, .24);
+}
+body {
+  background:
+    radial-gradient(circle at 8% 8%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 36%),
+    radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--primary) 8%, transparent), transparent 32%),
+    var(--bg);
+}
+body.dark .header { background: color-mix(in srgb, #17120f 86%, transparent); }
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 42px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
+  color: var(--accent);
+  background: var(--card);
+  box-shadow: 0 5px 14px rgba(55, 35, 22, .08);
+}
+.theme-toggle:hover {
+  transform: translateY(-2px) rotate(-8deg);
+  box-shadow: 0 9px 20px rgba(55, 35, 22, .14), 0 0 0 3px var(--ring);
+}
+.hero-overlay {
+  background:
+    linear-gradient(120deg, rgba(20, 13, 9, .46), rgba(20, 13, 9, .22)),
+    radial-gradient(circle at 80% 20%, rgba(212, 173, 104, .22), transparent 48%);
+}
+.hero {
+  background-position: center center;
+  background-size: cover;
+}
+.btn {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  border-radius: 14px;
+  padding: 13px 25px;
+  box-shadow: 0 10px 22px rgba(55, 35, 22, .16), inset 0 1px 0 rgba(255,255,255,.28);
+  transition: transform .28s cubic-bezier(.2,.75,.25,1), box-shadow .28s ease, background .28s ease, filter .28s ease;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #bd9148, #dfbd7a);
+  color: #26190f;
+}
+.btn-secondary {
+  background: color-mix(in srgb, var(--card) 88%, var(--accent) 12%);
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
+}
+.btn-whatsapp { border-radius: 14px; }
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,.25) 48%, transparent 72%);
+  transform: translateX(-130%);
+  transition: transform .65s ease;
+  pointer-events: none;
+}
+.btn:hover::after { transform: translateX(130%); }
+.btn:hover {
+  transform: translateY(-4px) perspective(700px) translateZ(8px);
+  box-shadow: 0 17px 30px rgba(55, 35, 22, .2), 0 0 0 3px var(--ring);
+  filter: saturate(1.08);
+}
+.btn:active { transform: translateY(-1px) scale(.985); }
+.btn:focus-visible, .theme-toggle:focus-visible, .nav-links a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.contact-form label { display: block; }
+.contact-form input, .contact-form textarea {
+  width: 100%;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 15px;
+  margin-top: 7px;
+}
+.contact-form input:focus, .contact-form textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+.stat-card, .about-card, .card, .feature, .step, .about-banner-image, .gallery-item {
+  translate: 0 var(--scroll-depth-shift, 0px);
+  rotate: X var(--scroll-depth-tilt, 0deg);
+  transform-style: preserve-3d;
+  will-change: translate, rotate;
+}
+@media (max-width: 992px) {
+  .theme-toggle { display: inline-flex; }
+}
+@media (max-width: 640px) {
+  .btn { width: 100%; }
+  .theme-toggle { width: auto; }
+  .stat-card, .about-card, .card, .feature, .step, .about-banner-image, .gallery-item {
+    translate: 0 calc(var(--scroll-depth-shift, 0px) * .65);
+    rotate: X calc(var(--scroll-depth-tilt, 0deg) * .65);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stat-card, .about-card, .card, .feature, .step, .about-banner-image, .gallery-item {
+    translate: none !important;
+    rotate: none !important;
+  }
+}
