@@ -1278,3 +1278,58 @@ body.dark .header { background: color-mix(in srgb, #17120f 86%, transparent); }
     will-change: auto !important;
   }
 }
+
+
+/* Fix transform cascade: reveal.visible previously overrode the 3D transforms. */
+.stat-card.reveal.visible,
+.about-card.reveal.visible,
+.card.reveal.visible,
+.feature.reveal.visible,
+.step.reveal.visible,
+.contact-form.reveal.visible,
+.about-banner-image.reveal.visible {
+  transform:
+    perspective(1100px)
+    rotateX(var(--od-tilt-y, 0deg))
+    rotateY(var(--od-tilt-x, 0deg))
+    translateZ(var(--od-lift, 2px));
+}
+.hero .hero-content.reveal.visible {
+  transform:
+    perspective(1200px)
+    translate3d(var(--od-hero-x, 0px), var(--od-hero-y, 0px), 28px);
+}
+.gallery-item img.reveal.visible,
+.review-shot img.reveal.visible {
+  transform: translateZ(12px);
+}
+.gallery-item:hover img.reveal.visible,
+.review-shot:hover img.reveal.visible {
+  transform: translateZ(24px) scale(1.025);
+}
+@media (max-width: 768px), (hover: none) {
+  .stat-card.reveal.visible,
+  .about-card.reveal.visible,
+  .card.reveal.visible,
+  .feature.reveal.visible,
+  .step.reveal.visible,
+  .contact-form.reveal.visible,
+  .about-banner-image.reveal.visible {
+    transform: perspective(900px) rotateX(.6deg) translateZ(2px);
+  }
+  .hero .hero-content.reveal.visible { transform: none; }
+  .gallery-item img.reveal.visible,
+  .review-shot img.reveal.visible { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stat-card.reveal.visible,
+  .about-card.reveal.visible,
+  .card.reveal.visible,
+  .feature.reveal.visible,
+  .step.reveal.visible,
+  .contact-form.reveal.visible,
+  .about-banner-image.reveal.visible,
+  .hero .hero-content.reveal.visible,
+  .gallery-item img.reveal.visible,
+  .review-shot img.reveal.visible { transform: none !important; }
+}
