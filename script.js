@@ -187,8 +187,6 @@
     window.addEventListener("scroll", updateScrollDepth, { passive: true });
     window.addEventListener("resize", updateScrollDepth, { passive: true });
     updateScrollDepth();
-  }
-
   } else if (!reduceMotion && !finePointer && "IntersectionObserver" in window) {
     // Lightweight mobile bubble depth: update only elements currently near the viewport.
     const depthItems = document.querySelectorAll(
