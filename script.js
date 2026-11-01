@@ -169,10 +169,13 @@
           const rect = element.getBoundingClientRect();
           if (rect.bottom < -80 || rect.top > window.innerHeight + 80) return;
           const distance = (rect.top + rect.height / 2) - viewportCenter;
-          const shift = Math.max(-7, Math.min(7, distance * -0.012));
-          const tilt = Math.max(-1.15, Math.min(1.15, distance * -0.0018));
+          const normalizedDistance = Math.min(1, Math.abs(distance) / (window.innerHeight * 0.72));
+          const bubbleScale = 1.085 - (normalizedDistance * 0.145);
+          const shift = Math.max(-9, Math.min(9, distance * -0.016));
+          const tilt = Math.max(-1.8, Math.min(1.8, distance * -0.0026));
           element.style.setProperty("--scroll-depth-shift", shift.toFixed(2) + "px");
           element.style.setProperty("--scroll-depth-tilt", tilt.toFixed(2) + "deg");
+          element.style.setProperty("--scroll-bubble-scale", bubbleScale.toFixed(3));
         });
         depthFrame = 0;
       });
