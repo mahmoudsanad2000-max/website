@@ -254,8 +254,10 @@
   }
 
   // Save contact requests in Supabase; show success only after database confirmation.
+  let isSubmittingContactForm = false;
   contactForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (isSubmittingContactForm) return;
     if (!contactForm.reportValidity()) return;
 
     const submitButton = contactForm.querySelector('button[type="submit"], input[type="submit"]');
@@ -272,8 +274,10 @@
       return;
     }
 
+    isSubmittingContactForm = true;
     if (submitButton) {
       submitButton.disabled = true;
+      submitButton.setAttribute("aria-busy", "true");
       submitButton.textContent = "جارٍ إرسال الطلب...";
     }
 
@@ -319,8 +323,10 @@
         : "لم نتمكن من إرسال طلبك الآن. حاول مرة أخرى أو تواصل معنا عبر الهاتف أو واتساب.";
       showFormMessage(contactForm, messageText, true);
     } finally {
+      isSubmittingContactForm = false;
       if (submitButton) {
         submitButton.disabled = false;
+        submitButton.removeAttribute("aria-busy");
         submitButton.textContent = originalButtonText;
       }
     }
