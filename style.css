@@ -1434,3 +1434,79 @@ body::before {
 body.dark .btn-secondary {
   color: #4b3525;
 }
+
+
+/* Touch-first 3D: visible depth while scrolling and tactile press feedback */
+@media (max-width: 768px), (hover: none) {
+  .stat-card,
+  .about-card,
+  .card,
+  .feature,
+  .step,
+  .contact-form,
+  .about-banner-image,
+  .gallery-item,
+  .review-shot {
+    transform: perspective(850px)
+      rotateX(var(--scroll-depth-tilt, .7deg))
+      translateY(var(--scroll-depth-shift, 0px))
+      translateZ(3px);
+    transform-style: preserve-3d;
+    transition: transform 260ms cubic-bezier(.2,.75,.25,1),
+      box-shadow 260ms ease, border-color 260ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .stat-card.reveal.visible,
+  .about-card.reveal.visible,
+  .card.reveal.visible,
+  .feature.reveal.visible,
+  .step.reveal.visible,
+  .contact-form.reveal.visible,
+  .about-banner-image.reveal.visible,
+  .gallery-item.reveal.visible,
+  .review-shot.reveal.visible {
+    transform: perspective(850px)
+      rotateX(var(--scroll-depth-tilt, .7deg))
+      translateY(var(--scroll-depth-shift, 0px))
+      translateZ(3px);
+  }
+
+  .stat-card:active,
+  .about-card:active,
+  .card:active,
+  .feature:active,
+  .step:active,
+  .contact-form:active,
+  .gallery-item:active,
+  .review-shot:active {
+    transform: perspective(850px) rotateX(2deg) scale(.975) translateZ(10px);
+    box-shadow: 0 18px 30px rgba(55, 35, 22, .2), 0 0 0 2px var(--ring);
+  }
+
+  .gallery-item:active img,
+  .review-shot:active img {
+    transform: scale(.97) translateZ(8px);
+  }
+
+  .hero {
+    background-attachment: scroll;
+  }
+  .hero-content,
+  .hero .hero-content.reveal.visible {
+    transform: translateY(calc(var(--hero-scroll-shift, 0px) * .35));
+    transition: transform 180ms ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-card, .about-card, .card, .feature, .step,
+  .contact-form, .about-banner-image, .gallery-item, .review-shot,
+  .stat-card.reveal.visible, .about-card.reveal.visible, .card.reveal.visible,
+  .feature.reveal.visible, .step.reveal.visible, .contact-form.reveal.visible,
+  .about-banner-image.reveal.visible, .gallery-item.reveal.visible,
+  .review-shot.reveal.visible {
+    transform: none !important;
+    transition: none !important;
+  }
+}
