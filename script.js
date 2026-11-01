@@ -159,7 +159,7 @@
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   // Keep scroll-linked depth calculations on desktop pointers only.
-  // Touch devices retain the CSS reveal effects without per-scroll layout reads.
+  // Touch devices use observer-limited updates for the bubble depth effect.
   if (!reduceMotion && finePointer) {
     const depthItems = document.querySelectorAll(
       ".stat-card, .about-card, .card, .feature, .step, .about-banner-image, .gallery-item"
