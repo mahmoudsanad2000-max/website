@@ -35,7 +35,7 @@
   // Theme preference.
   try {
     const storedTheme = localStorage.getItem("theme");
-    const isDarkDefault = storedTheme ? storedTheme === "dark" : false;
+    const isDarkDefault = storedTheme ? storedTheme === "dark" : true;
     document.body.classList.toggle("dark", isDarkDefault);
 
     if (themeToggle) {
