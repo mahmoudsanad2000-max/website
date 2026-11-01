@@ -1809,3 +1809,27 @@ body > #loader { z-index: 3000; }
     will-change: transform;
   }
 }
+
+/* Dense, visible furniture watermark coverage — desktop and mobile */
+.watermark-stage {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+.watermark-piece {
+  width: clamp(42px, 5.2vw, 68px) !important;
+  opacity: 1;
+}
+@keyframes od-watermark-burst {
+  0% { opacity: 0; transform: translate3d(var(--sx),var(--sy),180px) rotateX(85deg) rotateY(120deg) rotateZ(var(--sr)) scale(.08); }
+  55% { opacity: .30; }
+  100% { opacity: .24; transform: translate3d(0,0,0) rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz)) scale(1); }
+}
+body.dark .watermark-piece {
+  color: #dfbd78 !important;
+  filter: drop-shadow(0 4px 7px rgba(0,0,0,.28));
+}
+@media (max-width: 700px) {
+  .watermark-piece {
+    width: clamp(32px, 7vw, 46px) !important;
+  }
+}
