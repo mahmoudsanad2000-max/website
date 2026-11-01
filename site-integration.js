@@ -43,7 +43,6 @@
       }).then(({error})=>{if(error)console.warn('Office Design analytics:',error.message)});
     }catch(error){console.warn('Office Design analytics unavailable:',error)}
   }
-  trackWebsiteVisit();
   const text = (selector, value) => { const el=document.querySelector(selector); if(el && value) el.textContent=value; };
   function setMeta(selector, attribute, value, content){
     if(!content)return;
@@ -106,21 +105,24 @@
     const banner=media?.find(x=>x.section==='banner');const bannerSection=document.querySelector('.about-banner');if(bannerSection)bannerSection.style.display=banner?'':'none';if(banner){const img=document.querySelector('.about-banner-image');if(img){img.src=getUrl(banner.file_path);img.alt=banner.alt_text||banner.title||'Office Design';}}
     const gallery=document.querySelector('.gallery-track'); if(gallery){const items=media.filter(x=>x.section==='gallery');gallery.innerHTML=items.map(x=>`<div class="gallery-item"><img loading="lazy" class="lightbox-trigger reveal visible" src="${getUrl(x.file_path)}" alt="${escapeHtml(x.alt_text||x.title)}"></div>`).join('');}
     const reviews=document.querySelector('#testimonialTrack'); if(reviews){const items=media.filter(x=>x.section==='testimonials');reviews.innerHTML=items.map(x=>`<article class="review-shot"><img loading="lazy" class="lightbox-trigger" src="${getUrl(x.file_path)}" alt="${escapeHtml(x.alt_text||x.title)}"></article>`).join('');}
-    // Load optional blog content after the main page has rendered.
+    // Load optional blog content only when the visitor approaches its position.
     const loadPosts = async () => {
       const {data:posts,error:pErr} = await client.from('posts').select('*').eq('is_published',true).order('published_at',{ascending:false});
       if(pErr) { console.warn('Office Design posts:',pErr); return; }
       if(posts?.length) renderPosts(posts);
     };
-    const schedulePosts = () => {
-      if('requestIdleCallback' in window) {
-        window.requestIdleCallback(() => { void loadPosts(); }, {timeout:4000});
-      } else {
-        window.setTimeout(() => { void loadPosts(); },1800);
-      }
-    };
-    if(document.readyState === 'complete') schedulePosts();
-    else window.addEventListener('load',schedulePosts,{once:true});
+    const contactSection = document.querySelector('#contact');
+    if ('IntersectionObserver' in window && contactSection) {
+      const postsObserver = new IntersectionObserver((entries, observer) => {
+        if (entries.some(entry => entry.isIntersecting)) {
+          observer.disconnect();
+          void loadPosts();
+        }
+      }, { rootMargin: '700px 0px', threshold: 0 });
+      postsObserver.observe(contactSection);
+    } else {
+      window.setTimeout(() => { void loadPosts(); }, 8000);
+    }
   }
   function escapeHtml(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function renderPosts(posts){
@@ -128,5 +130,16 @@
     let section=document.querySelector('#cms-posts');if(!section){section=document.createElement('section');section.id='cms-posts';section.className='section';section.innerHTML='<div class="container"><h2>آخر الأخبار والمنشورات</h2><div class="cards-grid" id="cms-post-list"></div></div>';contact.parentNode.insertBefore(section,contact);}
     const list=section.querySelector('#cms-post-list');list.innerHTML=posts.map(p=>`<article class="card">${p.image_path?`<img src="${getUrl(p.image_path)}" alt="${escapeHtml(p.title)}" style="width:100%;height:190px;object-fit:cover;margin-bottom:12px">`:''}<h3>${escapeHtml(p.title)}</h3><p>${escapeHtml(p.excerpt)}</p>${p.body?`<details><summary>اقرأ المزيد</summary><p>${escapeHtml(p.body).replace(/\n/g,'<br>')}</p></details>`:''}</article>`).join('');
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  function scheduleInit(){
+    const start = () => {
+      trackWebsiteVisit();
+      void init();
+    };
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(start, { timeout: 2200 });
+    } else {
+      window.setTimeout(start, 1000);
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scheduleInit,{once:true});else scheduleInit();
 })();
