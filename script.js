@@ -279,6 +279,24 @@
 
     try {
       const db = getSupabaseClient();
+      let attribution = {};
+      try {
+        const saved = JSON.parse(sessionStorage.getItem("office_design_attribution") || "{}");
+        const params = new URLSearchParams(window.location.search);
+        const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content"];
+        keys.forEach((key) => {
+          const value = params.get(key);
+          if (value && !saved[key]) saved[key] = value.slice(0, 200);
+        });
+        attribution = {
+          utm_source: saved.utm_source || null,
+          utm_medium: saved.utm_medium || null,
+          utm_campaign: saved.utm_campaign || null,
+          utm_content: saved.utm_content || null,
+          landing_page: saved.landing_page || window.location.pathname || "/",
+          referrer: document.referrer ? new URL(document.referrer).origin : null
+        };
+      } catch (_) {}
       const { error } = await db.from("service_requests").insert([{
         customer_name: customerName,
         phone,
@@ -287,7 +305,8 @@
         service_type: "استفسار عام",
         description: message,
         status: "new",
-        source: "website"
+        source: "website",
+        ...attribution
       }]);
       if (error) throw error;
 
