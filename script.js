@@ -189,6 +189,47 @@
     updateScrollDepth();
   }
 
+  } else if (!reduceMotion && !finePointer && "IntersectionObserver" in window) {
+    // Lightweight mobile bubble depth: update only elements currently near the viewport.
+    const depthItems = document.querySelectorAll(
+      ".stat-card, .about-card, .card, .feature, .step, .contact-form, .about-banner-image, .gallery-item, .review-shot"
+    );
+    const activeDepthItems = new Set();
+    let depthFrame = 0;
+    const depthObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) activeDepthItems.add(entry.target);
+        else activeDepthItems.delete(entry.target);
+      });
+      updateMobileScrollDepth();
+    }, { rootMargin: "100px 0px", threshold: 0 });
+
+    depthItems.forEach((element) => depthObserver.observe(element));
+
+    function updateMobileScrollDepth() {
+      if (depthFrame) return;
+      depthFrame = window.requestAnimationFrame(() => {
+        const viewportCenter = window.innerHeight * 0.52;
+        activeDepthItems.forEach((element) => {
+          const rect = element.getBoundingClientRect();
+          const distance = (rect.top + rect.height / 2) - viewportCenter;
+          const normalizedDistance = Math.min(1, Math.abs(distance) / (window.innerHeight * 0.72));
+          const bubbleScale = 1.085 - (normalizedDistance * 0.145);
+          const shift = Math.max(-9, Math.min(9, distance * -0.016));
+          const tilt = Math.max(-1.8, Math.min(1.8, distance * -0.0026));
+          element.style.setProperty("--scroll-depth-shift", shift.toFixed(2) + "px");
+          element.style.setProperty("--scroll-depth-tilt", tilt.toFixed(2) + "deg");
+          element.style.setProperty("--scroll-bubble-scale", bubbleScale.toFixed(3));
+        });
+        depthFrame = 0;
+      });
+    }
+
+    window.addEventListener("scroll", updateMobileScrollDepth, { passive: true });
+    window.addEventListener("resize", updateMobileScrollDepth, { passive: true });
+    updateMobileScrollDepth();
+  }
+
   // Pointer-driven 3D tilt for desktop; touch devices keep the lighter scroll depth effect.
   if (!reduceMotion && finePointer) {
     const tiltTargets = document.querySelectorAll(
