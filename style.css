@@ -1639,3 +1639,86 @@ body.dark .watermark-piece { color:#dfbd78!important; filter:drop-shadow(0 4px 6
 @media(prefers-reduced-motion:reduce) {
  .watermark-piece { animation:none!important; opacity:.16!important; transform:none!important; }
 }
+
+
+/* FINAL FIX — keep the watermark above the page canvas, but below all content. */
+.watermark-stage {
+  z-index: 0 !important;
+  contain: none !important;
+  transform: none !important;
+}
+body > .header,
+body > main,
+body > footer,
+body > #loader {
+  position: relative;
+  z-index: 1;
+}
+body > .header { z-index: 2000; }
+body > #loader { z-index: 3000; }
+
+/* Mobile/tablet: make 3D depth visible on entry and while touching, without hover. */
+@media (max-width: 900px) and (hover: none) and (pointer: coarse) {
+  .stat-card,
+  .about-card,
+  .card,
+  .feature,
+  .step,
+  .contact-form,
+  .about-banner-image,
+  .gallery-item,
+  .review-shot {
+    transform: perspective(900px) rotateX(.9deg) translate3d(0,0,5px) !important;
+    transform-style: preserve-3d !important;
+    backface-visibility: hidden;
+    transition: transform 240ms ease, box-shadow 240ms ease !important;
+  }
+
+  .stat-card.reveal.visible,
+  .about-card.reveal.visible,
+  .card.reveal.visible,
+  .feature.reveal.visible,
+  .step.reveal.visible,
+  .contact-form.reveal.visible,
+  .about-banner-image.reveal.visible,
+  .gallery-item.reveal.visible,
+  .review-shot.reveal.visible {
+    animation: od-mobile-3d-enter .72s cubic-bezier(.2,.8,.2,1) both;
+  }
+
+  .stat-card:active,
+  .about-card:active,
+  .card:active,
+  .feature:active,
+  .step:active,
+  .contact-form:active,
+  .about-banner-image:active,
+  .gallery-item:active,
+  .review-shot:active {
+    transform: perspective(900px) rotateX(3deg) rotateY(-1deg) translate3d(0,-3px,16px) scale(.985) !important;
+    box-shadow: 0 20px 34px rgba(55,35,22,.22), 0 0 0 1px rgba(198,161,91,.32) !important;
+  }
+
+  .gallery-item:active img,
+  .review-shot:active img {
+    transform: translateZ(10px) scale(.985);
+  }
+}
+@keyframes od-mobile-3d-enter {
+  0% { opacity: .65; transform: perspective(900px) rotateX(9deg) rotateY(-4deg) translate3d(0,22px,-28px) scale(.94); }
+  65% { opacity: 1; transform: perspective(900px) rotateX(-1.8deg) rotateY(1deg) translate3d(0,-3px,12px) scale(1.015); }
+  100% { opacity: 1; transform: perspective(900px) rotateX(.9deg) translate3d(0,0,5px) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .watermark-piece { animation: none !important; opacity: .16 !important; }
+  .stat-card.reveal.visible,
+  .about-card.reveal.visible,
+  .card.reveal.visible,
+  .feature.reveal.visible,
+  .step.reveal.visible,
+  .contact-form.reveal.visible,
+  .about-banner-image.reveal.visible,
+  .gallery-item.reveal.visible,
+  .review-shot.reveal.visible { animation: none !important; }
+}
