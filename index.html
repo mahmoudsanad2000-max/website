@@ -1,12 +1,35 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-N7XGTW4R');</script>
+  <!-- Google Tag Manager: load after the first interaction or browser idle time -->
+<script>
+(function(w,d){
+  var loaded=false;
+  function loadGTM(){
+    if(loaded) return;
+    loaded=true;
+    w.dataLayer=w.dataLayer||[];
+    w.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});
+    var script=d.createElement('script');
+    script.async=true;
+    script.src='https://www.googletagmanager.com/gtm.js?id=GTM-N7XGTW4R';
+    d.head.appendChild(script);
+    ['pointerdown','keydown','touchstart','scroll'].forEach(function(eventName){
+      w.removeEventListener(eventName,loadGTM);
+    });
+  }
+  ['pointerdown','keydown','touchstart','scroll'].forEach(function(eventName){
+    w.addEventListener(eventName,loadGTM,{once:true,passive:true});
+  });
+  w.addEventListener('load',function(){
+    if('requestIdleCallback' in w){
+      w.requestIdleCallback(loadGTM,{timeout:8000});
+    }else{
+      w.setTimeout(loadGTM,5000);
+    }
+  },{once:true});
+})(window,document);
+</script>
 <!-- End Google Tag Manager -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
