@@ -197,7 +197,7 @@ function renderRequests(){
   const term=$('requestSearch').value.trim().toLowerCase();
   const status=$('requestStatusFilter').value;
   const filtered=requestRows.filter(r=>{
-    const matchesText=!term||String(r.customer_name||'').toLowerCase().includes(term)||String(r.phone||'').toLowerCase().includes(term);
+    const matchesText=!term||String(r.customer_name||'').toLowerCase().includes(term)||String(r.phone||'').toLowerCase().includes(term)||String(r.address||'').toLowerCase().includes(term);
     return matchesText&&(status==='all'||r.status===status);
   });
   if(!filtered.length){body.innerHTML='<tr><td class="request-empty" colspan="12">'+(requestRows.length?'لا توجد طلبات مطابقة للبحث أو الفلتر.':'لا توجد طلبات حتى الآن.')+'</td></tr>';return}
