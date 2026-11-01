@@ -53,9 +53,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
   <link rel="preload" as="image" href="/photo/hero.jpg" fetchpriority="high" />
-  <link rel="stylesheet" href="style.css?v=contact-submit-hitarea-20261101-1" />
+  <link rel="stylesheet" href="style.css?v=critical-path-20261101-3" />
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->
@@ -78,7 +79,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <header class="header" id="top">
     <nav class="nav container" aria-label="Main Navigation">
       <a href="#top" class="logo logo-brand">
-        <img src="photo/logo.png" alt="Office design logo" class="logo-image" />
+        <img src="photo/logo.png" alt="Office design logo" class="logo-image" width="458" height="349" decoding="async" />
         <span class="logo-text">Office design</span>
       </a>
       <button class="nav-toggle" aria-label="Toggle menu" id="navToggle">☰</button>
@@ -128,7 +129,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <section class="about-banner section">
       <div class="container">
-        <img src="photo/33eeed6d-c10f-4034-a7d6-2e4c91fb9742.jpg" alt="Office design banner" class="about-banner-image reveal" />
+        <img src="photo/33eeed6d-c10f-4034-a7d6-2e4c91fb9742.jpg" alt="Office design banner" class="about-banner-image reveal" width="1024" height="1024" loading="lazy" decoding="async" />
       </div>
     </section>
 
@@ -365,9 +366,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <button id="backToTop" class="back-to-top" aria-label="Back to top">↑</button>
 
   <!-- Load Supabase before any script that uses it -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=hero-lcp-bubbles-20261101-2"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="script.js?v=hero-lcp-bubbles-20261101-2"></script>
   <!-- Office Design CMS Integration -->
-  <script src="./site-integration.js?v=performance-mobile-20261101-1"></script>
+  <script defer src="./site-integration.js?v=critical-path-20261101-3"></script>
 </body>
 </html>
