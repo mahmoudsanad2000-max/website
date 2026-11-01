@@ -153,10 +153,11 @@
   }
   nextBtn?.addEventListener("click", () => scrollReviews(1));
   prevBtn?.addEventListener("click", () => scrollReviews(-1));
-  if (reviewTrack) window.setInterval(() => scrollReviews(1), 4500);
+  if (reviewTrack) window.setInterval(() => { if (!document.hidden) scrollReviews(1); }, 4500);
 
-  // Subtle scroll-linked 3D depth motion; respects reduced-motion preferences.
-  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  // Keep scroll-linked depth calculations on desktop pointers only.
+  // Touch devices retain the CSS reveal effects without per-scroll layout reads.
+  if (!reduceMotion && finePointer) {
     const depthItems = document.querySelectorAll(
       ".stat-card, .about-card, .card, .feature, .step, .about-banner-image, .gallery-item"
     );
@@ -186,8 +187,6 @@
   }
 
   // Pointer-driven 3D tilt for desktop; touch devices keep the lighter scroll depth effect.
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   if (!reduceMotion && finePointer) {
     const tiltTargets = document.querySelectorAll(
       ".stat-card, .about-card, .card, .feature, .step, .contact-form, .about-banner-image, .gallery-item, .review-shot"
