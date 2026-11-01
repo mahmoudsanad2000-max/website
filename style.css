@@ -1722,3 +1722,54 @@ body > #loader { z-index: 3000; }
   .gallery-item.reveal.visible,
   .review-shot.reveal.visible { animation: none !important; }
 }
+
+
+/* Scroll bubble effect: cards swell near the viewport center and gently recede away. */
+.stat-card,
+.about-card,
+.card,
+.feature,
+.step,
+.contact-form,
+.about-banner-image,
+.gallery-item,
+.review-shot,
+.stat-card.reveal.visible,
+.about-card.reveal.visible,
+.card.reveal.visible,
+.feature.reveal.visible,
+.step.reveal.visible,
+.contact-form.reveal.visible,
+.about-banner-image.reveal.visible,
+.gallery-item.reveal.visible,
+.review-shot.reveal.visible {
+  transition: transform 220ms cubic-bezier(.2,.75,.25,1), box-shadow 220ms ease !important;
+}
+@media (max-width: 900px), (hover: none) {
+  .stat-card,
+  .about-card,
+  .card,
+  .feature,
+  .step,
+  .contact-form,
+  .about-banner-image,
+  .gallery-item,
+  .review-shot,
+  .stat-card.reveal.visible,
+  .about-card.reveal.visible,
+  .card.reveal.visible,
+  .feature.reveal.visible,
+  .step.reveal.visible,
+  .contact-form.reveal.visible,
+  .about-banner-image.reveal.visible,
+  .gallery-item.reveal.visible,
+  .review-shot.reveal.visible {
+    transform: perspective(950px)
+      rotateX(var(--scroll-depth-tilt, 0deg))
+      translateY(var(--scroll-depth-shift, 0px))
+      translateZ(5px)
+      scale(var(--scroll-bubble-scale, .94)) !important;
+    transform-origin: center center;
+    will-change: transform;
+  }
+}
