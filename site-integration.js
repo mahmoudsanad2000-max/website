@@ -60,12 +60,11 @@
     setMeta('meta[name="twitter:card"]','name','twitter:card','summary_large_image');
   }
   async function init(){
-    const [{data:content,error:cErr},{data:media,error:mErr},{data:posts,error:pErr}] = await Promise.all([
+    const [{data:content,error:cErr},{data:media,error:mErr}] = await Promise.all([
       client.from('site_content').select('key,value'),
-      client.from('media_items').select('*').eq('is_published',true).order('sort_order'),
-      client.from('posts').select('*').eq('is_published',true).order('published_at',{ascending:false})
+      client.from('media_items').select('*').eq('is_published',true).order('sort_order')
     ]);
-    if(cErr||mErr||pErr) { console.warn('Office Design CMS: using original page content.',cErr||mErr||pErr); return; }
+    if(cErr||mErr) { console.warn('Office Design CMS: using original page content.',cErr||mErr); return; }
     const c=Object.fromEntries((content||[]).map(x=>[x.key,x.value]));
     applySeoSettings(c);
     text('.hero h1',c.hero_title); text('.hero-content > p',c.hero_description);
@@ -107,7 +106,21 @@
     const banner=media?.find(x=>x.section==='banner');const bannerSection=document.querySelector('.about-banner');if(bannerSection)bannerSection.style.display=banner?'':'none';if(banner){const img=document.querySelector('.about-banner-image');if(img){img.src=getUrl(banner.file_path);img.alt=banner.alt_text||banner.title||'Office Design';}}
     const gallery=document.querySelector('.gallery-track'); if(gallery){const items=media.filter(x=>x.section==='gallery');gallery.innerHTML=items.map(x=>`<div class="gallery-item"><img loading="lazy" class="lightbox-trigger reveal visible" src="${getUrl(x.file_path)}" alt="${escapeHtml(x.alt_text||x.title)}"></div>`).join('');}
     const reviews=document.querySelector('#testimonialTrack'); if(reviews){const items=media.filter(x=>x.section==='testimonials');reviews.innerHTML=items.map(x=>`<article class="review-shot"><img loading="lazy" class="lightbox-trigger" src="${getUrl(x.file_path)}" alt="${escapeHtml(x.alt_text||x.title)}"></article>`).join('');}
-    if(posts?.length) renderPosts(posts);
+    // Load optional blog content after the main page has rendered.
+    const loadPosts = async () => {
+      const {data:posts,error:pErr} = await client.from('posts').select('*').eq('is_published',true).order('published_at',{ascending:false});
+      if(pErr) { console.warn('Office Design posts:',pErr); return; }
+      if(posts?.length) renderPosts(posts);
+    };
+    const schedulePosts = () => {
+      if('requestIdleCallback' in window) {
+        window.requestIdleCallback(() => { void loadPosts(); }, {timeout:4000});
+      } else {
+        window.setTimeout(() => { void loadPosts(); },1800);
+      }
+    };
+    if(document.readyState === 'complete') schedulePosts();
+    else window.addEventListener('load',schedulePosts,{once:true});
   }
   function escapeHtml(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function renderPosts(posts){
