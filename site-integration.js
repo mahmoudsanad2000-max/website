@@ -6,6 +6,26 @@
   const BUCKET = 'office-media';
   const client = window.supabase.createClient(URL, KEY);
   const getUrl = path => (path.startsWith('photo/') || path.startsWith('screan/')) ? '/'+path : client.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  function getMarketingAttribution(){
+    const keys=['utm_source','utm_medium','utm_campaign','utm_content'];
+    try{
+      const params=new URLSearchParams(window.location.search);
+      const current={};
+      keys.forEach(key=>{const value=params.get(key);if(value)current[key]=value.slice(0,200);});
+      if(Object.keys(current).length){
+        const saved=JSON.parse(sessionStorage.getItem('office_design_attribution')||'{}');
+        sessionStorage.setItem('office_design_attribution',JSON.stringify({...saved,...current,landing_page:saved.landing_page||window.location.pathname}));
+      }
+      const saved=JSON.parse(sessionStorage.getItem('office_design_attribution')||'{}');
+      return {
+        utm_source:saved.utm_source||null,
+        utm_medium:saved.utm_medium||null,
+        utm_campaign:saved.utm_campaign||null,
+        utm_content:saved.utm_content||null,
+        landing_page:saved.landing_page||window.location.pathname||'/'
+      };
+    }catch(_){return {utm_source:null,utm_medium:null,utm_campaign:null,utm_content:null,landing_page:window.location.pathname||'/'};}
+  }
   function trackWebsiteVisit(){
     try{
       let visitorId=localStorage.getItem('office_design_visitor_id');
@@ -18,7 +38,8 @@
       client.from('site_visits').insert({
         visitor_id:visitorId,
         page_path:window.location.pathname||'/',
-        referrer
+        referrer,
+        ...getMarketingAttribution()
       }).then(({error})=>{if(error)console.warn('Office Design analytics:',error.message)});
     }catch(error){console.warn('Office Design analytics unavailable:',error)}
   }
