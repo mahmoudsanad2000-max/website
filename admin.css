@@ -134,3 +134,28 @@ footer{color:var(--muted)}
 .settings-action .btn{flex:none}
 @media(max-width:520px){.settings-theme-options{grid-template-columns:1fr}.settings-action{align-items:stretch;flex-direction:column}.settings-action .btn{width:100%}}
 @media print{body{background:#fff;color:#18263a}}
+
+
+/* Mobile navigation: compact three-line menu */
+.mobile-menu-toggle{display:none}
+@media(max-width:850px){
+  .sidebar{padding:10px 13px;gap:0}
+  .brand{display:flex;align-items:center;position:relative;padding:0 3px 9px;border-bottom:0}
+  .mobile-menu-toggle{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:43px;height:43px;margin-inline-start:auto;flex:none;border:1px solid #ffffff35;border-radius:12px;background:#ffffff12;color:#f5e8d5;cursor:pointer;transition:background .2s ease,border-color .2s ease}
+  .mobile-menu-toggle:hover,.mobile-menu-toggle:focus-visible{background:#ffffff22;border-color:var(--gold);outline:none}
+  .mobile-menu-toggle span{display:block;width:20px;height:2px;border-radius:4px;background:currentColor;transition:transform .2s ease,opacity .2s ease}
+  .sidebar.mobile-open .mobile-menu-toggle span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .sidebar.mobile-open .mobile-menu-toggle span:nth-child(2){opacity:0}
+  .sidebar.mobile-open .mobile-menu-toggle span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+  .sidebar nav{display:none;flex-direction:column;flex-wrap:nowrap;gap:5px;margin:7px 0 0;padding:10px 0 4px;border-top:1px solid #ffffff22;overflow:visible;max-height:calc(100dvh - 125px);overflow-y:auto;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  .sidebar.mobile-open nav{display:flex}
+  .sidebar nav .nav-item{display:flex;width:100%;min-height:45px;flex:0 0 auto;justify-content:flex-start;white-space:normal;text-align:right;padding:10px 13px;font-size:13px;border-radius:10px}
+  .sidebar nav .nav-item span{flex:1}
+  .sidebar nav .nav-item.active{background:#ffffff20}
+  .sidebar-bottom{display:none;flex-direction:column;align-items:stretch;gap:0;margin-top:8px;padding:9px 3px 2px;border-top:1px solid #ffffff22}
+  .sidebar.mobile-open .sidebar-bottom{display:flex}
+  .sidebar-bottom a,.sidebar-bottom .logout{display:block;width:100%;padding:11px 10px;border-radius:9px}
+  .sidebar-bottom a:hover,.sidebar-bottom .logout:hover{background:#ffffff12}
+  .main{padding-top:16px}
+}
+@media(max-width:520px){.sidebar{padding:9px 11px}.brand{padding-bottom:7px}.brand .brand-mark{width:38px;height:38px}.mobile-menu-toggle{width:41px;height:41px}.sidebar nav .nav-item{min-height:44px}}
