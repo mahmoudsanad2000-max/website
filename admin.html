@@ -61,6 +61,29 @@
           </form>
           <p id="seoStatus" class="status" aria-live="polite"></p>
         </div>
+        <div class="panel">
+          <div class="panel-head"><div><h3>إنشاء رابط حملة تسويقية</h3><p>أنشئ رابطًا مختلفًا لكل إعلان أو منشور حتى تعرف مصدر طلبات الصيانة.</p></div></div>
+          <form id="campaignBuilderForm" class="post-form">
+            <label>اسم الحملة<input id="campaignName" maxlength="100" placeholder="مثال: عروض صيانة نوفمبر" required></label>
+            <label>مصدر الزيارة (utm_source)<input id="campaignSource" maxlength="100" placeholder="facebook أو google أو instagram" required></label>
+            <label>نوع التسويق (utm_medium)<input id="campaignMedium" maxlength="100" placeholder="social أو cpc أو email" required></label>
+            <label>تمييز الإعلان أو المنشور (utm_content)<input id="campaignContent" maxlength="100" placeholder="reel-01 أو story-november"></label>
+            <label>رابط الحملة<input id="campaignUrl" readonly dir="ltr" aria-label="رابط الحملة الناتج"></label>
+            <div class="form-actions"><button class="btn primary" id="copyCampaignUrl" type="button">نسخ رابط الحملة</button></div>
+          </form>
+          <p class="seo-note">استخدم الرابط الناتج في الإعلان أو المنشور نفسه. سيتم حفظ بيانات الحملة مع الزيارة وطلب العميل إذا أرسل نموذج التواصل من نفس جلسة التصفح.</p>
+          <p id="campaignStatus" class="status" aria-live="polite"></p>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h3>نتائج الحملات من طلبات العملاء</h3><p>عدد طلبات الصيانة المسجلة من روابط الحملات، مع الطلبات المكتملة.</p></div><button id="refreshCampaignStats" class="btn secondary" type="button">تحديث النتائج</button></div>
+          <div class="requests-table-wrap">
+            <table class="requests-table">
+              <thead><tr><th>الحملة</th><th>المصدر</th><th>نوع التسويق</th><th>إجمالي الطلبات</th><th>طلبات مكتملة</th></tr></thead>
+              <tbody id="campaignStatsBody"><tr><td colspan="5" class="request-empty">جارٍ تحميل النتائج...</td></tr></tbody>
+            </table>
+          </div>
+          <p id="campaignStatsStatus" class="status" aria-live="polite"></p>
+        </div>
       </section>
       <section id="page-media" class="page hidden">
         <div class="panel"><div class="panel-head"><div><h3>إضافة صورة للموقع</h3><p>يدعم JPG وPNG وWEBP وGIF حتى 10 ميجابايت.</p></div></div>
