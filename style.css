@@ -997,3 +997,54 @@ body {
   }
   .hero { background-attachment: scroll; }
 }
+
+
+/* 3D visibility refinement — depth is visible without hover on desktop and mobile. */
+.stat-card,
+.about-card,
+.card,
+.feature,
+.step,
+.contact-form,
+.about-banner-image {
+  transform: perspective(1200px) rotateX(.8deg) translateZ(3px);
+  box-shadow:
+    0 14px 30px rgba(4, 18, 35, .13),
+    0 3px 0 rgba(255,255,255,.42) inset,
+    0 0 0 1px rgba(212,166,74,.08);
+}
+
+.hero-content {
+  transform: perspective(1400px) translateZ(24px);
+}
+
+.gallery-item img,
+.review-shot img {
+  box-shadow: 0 12px 26px rgba(4,18,35,.18), 0 0 0 1px rgba(212,166,74,.12);
+}
+
+@media (max-width: 768px), (hover: none) {
+  .stat-card,
+  .about-card,
+  .card,
+  .feature,
+  .step,
+  .contact-form,
+  .about-banner-image {
+    transform: perspective(1000px) rotateX(.6deg) translateZ(2px);
+    box-shadow:
+      0 10px 22px rgba(4,18,35,.14),
+      0 2px 0 rgba(255,255,255,.38) inset,
+      0 0 0 1px rgba(212,166,74,.10);
+  }
+
+  .hero-content {
+    transform: perspective(1000px) translateZ(12px);
+  }
+
+  .gallery-item img,
+  .review-shot img {
+    transform: perspective(900px) rotateX(.7deg) translateZ(2px);
+    box-shadow: 0 9px 20px rgba(4,18,35,.17);
+  }
+}
