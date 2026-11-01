@@ -1189,3 +1189,92 @@ body.dark .header { background: color-mix(in srgb, #17120f 86%, transparent); }
     rotate: none !important;
   }
 }
+
+
+/* Interactive 3D layer — medium intensity, responsive and accessible. */
+:root {
+  --od-tilt-max: 7deg;
+  --od-3d-transition: 180ms cubic-bezier(.2,.75,.25,1);
+}
+.stat-card,
+.about-card,
+.card,
+.feature,
+.step,
+.contact-form,
+.about-banner-image,
+.gallery-item,
+.review-shot {
+  transform-style: preserve-3d;
+  transform:
+    perspective(1100px)
+    rotateX(var(--od-tilt-y, 0deg))
+    rotateY(var(--od-tilt-x, 0deg))
+    translateZ(var(--od-lift, 2px));
+  transition:
+    transform var(--od-3d-transition),
+    box-shadow .35s ease,
+    border-color .3s ease;
+  will-change: transform;
+}
+.stat-card:hover,
+.about-card:hover,
+.card:hover,
+.feature:hover,
+.step:hover,
+.contact-form:hover,
+.about-banner-image:hover,
+.gallery-item:hover,
+.review-shot:hover {
+  --od-lift: 9px;
+  box-shadow: var(--od-depth-shadow), var(--od-gold-glow);
+}
+.hero-content {
+  transform:
+    perspective(1200px)
+    translate3d(var(--od-hero-x, 0px), var(--od-hero-y, 0px), 28px);
+  transition: transform 220ms ease-out;
+}
+.gallery-item img,
+.review-shot img {
+  transform: translateZ(12px);
+  transition: transform .35s ease, box-shadow .35s ease, filter .35s ease;
+}
+.gallery-item:hover img,
+.review-shot:hover img {
+  transform: translateZ(24px) scale(1.025);
+  filter: saturate(1.07);
+}
+@media (max-width: 768px), (hover: none) {
+  .stat-card,
+  .about-card,
+  .card,
+  .feature,
+  .step,
+  .contact-form,
+  .about-banner-image,
+  .gallery-item,
+  .review-shot {
+    transform: perspective(900px) rotateX(.6deg) translateZ(2px);
+    transition: box-shadow .3s ease, border-color .3s ease;
+  }
+  .hero-content { transform: none; }
+  .gallery-item img,
+  .review-shot img { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stat-card,
+  .about-card,
+  .card,
+  .feature,
+  .step,
+  .contact-form,
+  .about-banner-image,
+  .gallery-item,
+  .review-shot,
+  .hero-content {
+    transform: none !important;
+    transition: none !important;
+    will-change: auto !important;
+  }
+}
