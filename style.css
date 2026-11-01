@@ -1333,3 +1333,102 @@ body.dark .header { background: color-mix(in srgb, #17120f 86%, transparent); }
   .gallery-item img.reveal.visible,
   .review-shot img.reveal.visible { transform: none !important; }
 }
+
+
+/* Office Design — warm walnut, champagne gold and subtle furniture watermark identity */
+:root {
+  --primary: #76513b;
+  --primary-2: #9a7255;
+  --accent: #c6a15b;
+  --accent-soft: #ead9b5;
+  --bg: #f8f5ef;
+  --bg-soft: #eee7dc;
+  --text: #34291f;
+  --text-soft: #76695d;
+  --card: #fffdf9;
+  --border: #e4d9ca;
+  --ring: rgba(198, 161, 91, .25);
+  --shadow: 0 14px 36px rgba(75, 51, 34, .12);
+  --shadow-soft: 0 8px 20px rgba(75, 51, 34, .07);
+}
+
+body.dark {
+  --primary: #dfc39b;
+  --primary-2: #c5a17a;
+  --accent: #dfbd78;
+  --accent-soft: #6b5538;
+  --bg: #171410;
+  --bg-soft: #242019;
+  --text: #f4ede2;
+  --text-soft: #c4b7a5;
+  --card: #211c16;
+  --border: #403528;
+  --ring: rgba(223, 189, 120, .25);
+  --shadow: 0 16px 40px rgba(0, 0, 0, .38);
+  --shadow-soft: 0 8px 22px rgba(0, 0, 0, .24);
+}
+
+/* A gentle warm correction over the existing hero photograph */
+.hero {
+  background-color: #5c4534;
+  background-blend-mode: normal;
+}
+.hero-overlay {
+  background:
+    linear-gradient(115deg, rgba(39, 28, 21, .70), rgba(75, 52, 35, .38) 58%, rgba(116, 82, 49, .28)),
+    radial-gradient(circle at 78% 22%, rgba(224, 190, 123, .30), transparent 46%),
+    linear-gradient(0deg, rgba(35, 26, 20, .24), transparent 62%);
+}
+body.dark .hero-overlay {
+  background:
+    linear-gradient(115deg, rgba(20, 16, 12, .78), rgba(49, 36, 25, .48) 58%, rgba(92, 65, 39, .34)),
+    radial-gradient(circle at 78% 22%, rgba(223, 189, 120, .23), transparent 46%);
+}
+
+/* Low-contrast line-art watermark: office chair, desk and furniture details */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .16;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='300' viewBox='0 0 360 300' fill='none' stroke='%239a7952' stroke-width='1.35' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg opacity='.58'%3E%3Cpath d='M55 66h42q10 0 12 10l5 34H62l-8-34q-2-10 1-10Z'/%3E%3Cpath d='M66 110l-3 17m43-17 4 17m-24-17v27m-15 0h31m-16 0-10 15m10-15 10 15'/%3E%3Cpath d='M185 82h92v8h-92zM194 90v62m74-62v62m-86 0h100'/%3E%3Cpath d='M215 62h36v20h-36zM222 68h22'/%3E%3Cpath d='M300 190h35v49h-35zM300 206h35m-18-16v49'/%3E%3Cpath d='M38 224h70m-62 0v-26h54v26m-46-26v-9h38v9'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 360px 300px;
+  background-repeat: repeat;
+  mix-blend-mode: multiply;
+}
+body.dark::before {
+  opacity: .11;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='300' viewBox='0 0 360 300' fill='none' stroke='%23d9bd8b' stroke-width='1.35' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg opacity='.7'%3E%3Cpath d='M55 66h42q10 0 12 10l5 34H62l-8-34q-2-10 1-10Z'/%3E%3Cpath d='M66 110l-3 17m43-17 4 17m-24-17v27m-15 0h31m-16 0-10 15m10-15 10 15'/%3E%3Cpath d='M185 82h92v8h-92zM194 90v62m74-62v62m-86 0h100'/%3E%3Cpath d='M215 62h36v20h-36zM222 68h22'/%3E%3Cpath d='M300 190h35v49h-35zM300 206h35m-18-16v49'/%3E%3Cpath d='M38 224h70m-62 0v-26h54v26m-46-26v-9h38v9'/%3E%3C/g%3E%3C/svg%3E");
+}
+body > * {
+  position: relative;
+  z-index: 1;
+}
+#loader, .header, .floating-whatsapp, .floating-call, .back-to-top, .lightbox {
+  z-index: 2000;
+}
+.hero-content {
+  color: #fffaf1;
+}
+.hero h1, .hero p {
+  color: #fffaf1;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #8b6245, #b18a58);
+  color: #fffaf1;
+  box-shadow: 0 10px 24px rgba(57, 37, 23, .28);
+}
+.btn-primary:hover {
+  box-shadow: 0 14px 28px rgba(57, 37, 23, .36);
+}
+.btn-secondary {
+  color: #654630;
+  background: rgba(255, 250, 241, .94);
+  border-color: rgba(234, 217, 181, .8);
+}
+body.dark .btn-secondary {
+  color: #4b3525;
+}
