@@ -155,6 +155,9 @@
   prevBtn?.addEventListener("click", () => scrollReviews(-1));
   if (reviewTrack) window.setInterval(() => { if (!document.hidden) scrollReviews(1); }, 4500);
 
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
   // Keep scroll-linked depth calculations on desktop pointers only.
   // Touch devices retain the CSS reveal effects without per-scroll layout reads.
   if (!reduceMotion && finePointer) {
