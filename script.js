@@ -35,7 +35,7 @@
   // Theme preference.
   try {
     const storedTheme = localStorage.getItem("theme");
-    const isDarkDefault = storedTheme ? storedTheme === "dark" : true;
+    const isDarkDefault = storedTheme ? storedTheme === "dark" : false;
     document.body.classList.toggle("dark", isDarkDefault);
 
     if (themeToggle) {
@@ -155,6 +155,33 @@
   prevBtn?.addEventListener("click", () => scrollReviews(-1));
   if (reviewTrack) window.setInterval(() => scrollReviews(1), 4500);
 
+  // Subtle scroll-linked 3D depth motion; respects reduced-motion preferences.
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const depthItems = document.querySelectorAll(
+      ".stat-card, .about-card, .card, .feature, .step, .about-banner-image, .gallery-item"
+    );
+    let depthFrame = 0;
+    const updateScrollDepth = () => {
+      if (depthFrame) return;
+      depthFrame = window.requestAnimationFrame(() => {
+        const viewportCenter = window.innerHeight * 0.52;
+        depthItems.forEach((element) => {
+          const rect = element.getBoundingClientRect();
+          if (rect.bottom < -80 || rect.top > window.innerHeight + 80) return;
+          const distance = (rect.top + rect.height / 2) - viewportCenter;
+          const shift = Math.max(-7, Math.min(7, distance * -0.012));
+          const tilt = Math.max(-1.15, Math.min(1.15, distance * -0.0018));
+          element.style.setProperty("--scroll-depth-shift", shift.toFixed(2) + "px");
+          element.style.setProperty("--scroll-depth-tilt", tilt.toFixed(2) + "deg");
+        });
+        depthFrame = 0;
+      });
+    };
+    window.addEventListener("scroll", updateScrollDepth, { passive: true });
+    window.addEventListener("resize", updateScrollDepth, { passive: true });
+    updateScrollDepth();
+  }
+
   // Initialize Supabase only when the contact form is submitted.
   function getSupabaseClient() {
     if (supabaseClient) return supabaseClient;
@@ -189,10 +216,11 @@
     const customerName = String(formData.get("name") || "").trim();
     const phone = String(formData.get("phone") || "").trim();
     const email = String(formData.get("email") || "").trim();
+    const address = String(formData.get("address") || "").trim();
     const message = String(formData.get("message") || "").trim();
 
-    if (!customerName || !phone || !message) {
-      showFormMessage(contactForm, "من فضلك أكمل الاسم ورقم الهاتف والرسالة.", true);
+    if (!customerName || !phone || !address || !message) {
+      showFormMessage(contactForm, "من فضلك أكمل الاسم ورقم الهاتف والعنوان بالتفصيل والرسالة.", true);
       return;
     }
 
@@ -207,6 +235,7 @@
         customer_name: customerName,
         phone,
         email: email || null,
+        address,
         service_type: "استفسار عام",
         description: message,
         status: "new",
