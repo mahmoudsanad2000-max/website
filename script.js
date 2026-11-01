@@ -182,6 +182,51 @@
     updateScrollDepth();
   }
 
+  // Pointer-driven 3D tilt for desktop; touch devices keep the lighter scroll depth effect.
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  if (!reduceMotion && finePointer) {
+    const tiltTargets = document.querySelectorAll(
+      ".stat-card, .about-card, .card, .feature, .step, .contact-form, .about-banner-image, .gallery-item, .review-shot"
+    );
+    tiltTargets.forEach((element) => {
+      let frame = 0;
+      element.addEventListener("pointermove", (event) => {
+        if (event.pointerType !== "mouse") return;
+        if (frame) window.cancelAnimationFrame(frame);
+        frame = window.requestAnimationFrame(() => {
+          const rect = element.getBoundingClientRect();
+          const x = (event.clientX - rect.left) / rect.width;
+          const y = (event.clientY - rect.top) / rect.height;
+          const rotateY = ((x - 0.5) * 2 * 5.5).toFixed(2);
+          const rotateX = ((0.5 - y) * 2 * 5.5).toFixed(2);
+          element.style.setProperty("--od-tilt-x", rotateY + "deg");
+          element.style.setProperty("--od-tilt-y", rotateX + "deg");
+        });
+      }, { passive: true });
+      element.addEventListener("pointerleave", () => {
+        if (frame) window.cancelAnimationFrame(frame);
+        element.style.setProperty("--od-tilt-x", "0deg");
+        element.style.setProperty("--od-tilt-y", "0deg");
+      }, { passive: true });
+    });
+
+    const hero = document.querySelector(".hero");
+    const heroContent = hero?.querySelector(".hero-content");
+    hero?.addEventListener("pointermove", (event) => {
+      if (!heroContent || event.pointerType !== "mouse") return;
+      const rect = hero.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - 0.5;
+      const y = (event.clientY - rect.top) / rect.height - 0.5;
+      heroContent.style.setProperty("--od-hero-x", (x * 12).toFixed(2) + "px");
+      heroContent.style.setProperty("--od-hero-y", (y * 9).toFixed(2) + "px");
+    }, { passive: true });
+    hero?.addEventListener("pointerleave", () => {
+      heroContent?.style.setProperty("--od-hero-x", "0px");
+      heroContent?.style.setProperty("--od-hero-y", "0px");
+    }, { passive: true });
+  }
+
   // Initialize Supabase only when the contact form is submitted.
   function getSupabaseClient() {
     if (supabaseClient) return supabaseClient;
