@@ -118,7 +118,7 @@ async function showApp(user){await checkAdmin(user);currentUser=user;$('userEmai
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='جارٍ التحقق...';const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){$('loginError').textContent=error.message;return}try{await showApp(data.user)}catch(err){$('loginError').textContent=err.message;await db.auth.signOut()}});
 $('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.reload()});
 const pageNames={overview:'نظرة عامة',content:'محتوى الموقع',media:'الصور والمعرض',posts:'المنشورات',requests:'طلبات العملاء',customers:'سجل العملاء',seo:'SEO والتسويق',visitors:'إحصائيات الزوار'};
-function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));$('page-'+page).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));$('pageTitle').textContent=pageNames[page];if(page==='visitors')loadVisitorStats()}
+function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));$('page-'+page).classList.remove('hidden');document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page));$('pageTitle').textContent=pageNames[page];if(page==='visitors')loadVisitorStats();if(page==='seo')loadCampaignStats()}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 async function refreshAll(){await Promise.all([loadContent(),loadSeo(),loadMedia(),loadPosts(),loadRequests()]);$('mediaCount').textContent=mediaRows.length;$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length}
 const requestStatuses=[['new','جديد'],['contacted','تم التواصل'],['scheduled','تم تحديد موعد'],['in_progress','قيد التنفيذ'],['completed','مكتمل'],['cancelled','ملغي']];
@@ -288,6 +288,50 @@ async function loadVisitorStats(){
   $('visitorStatus').textContent='آخر تحديث: '+new Date().toLocaleString('ar-EG')+' · الأرقام تعرض زواراً فريدين حسب معرّف متصفح مجهول.';
 }
 $('refreshVisitors').addEventListener('click',loadVisitorStats);
+
+function updateCampaignUrl(){
+  const base=window.location.origin+'/';
+  const params=new URLSearchParams();
+  const campaign=$('campaignName').value.trim();
+  const source=$('campaignSource').value.trim();
+  const medium=$('campaignMedium').value.trim();
+  const content=$('campaignContent').value.trim();
+  if(campaign)params.set('utm_campaign',campaign);
+  if(source)params.set('utm_source',source);
+  if(medium)params.set('utm_medium',medium);
+  if(content)params.set('utm_content',content);
+  $('campaignUrl').value=base+(params.toString()?'?'+params.toString():'');
+}
+['campaignName','campaignSource','campaignMedium','campaignContent'].forEach(id=>$(id).addEventListener('input',updateCampaignUrl));
+$('campaignBuilderForm').addEventListener('submit',e=>e.preventDefault());
+$('copyCampaignUrl').addEventListener('click',async()=>{
+  updateCampaignUrl();
+  try{await navigator.clipboard.writeText($('campaignUrl').value);$('campaignStatus').textContent='تم نسخ رابط الحملة. استخدمه في الإعلان أو المنشور.';}
+  catch(error){$('campaignUrl').select();$('campaignStatus').textContent='تعذر النسخ التلقائي؛ حدّد الرابط وانسخه يدويًا.';}
+});
+$('refreshCampaignStats').addEventListener('click',loadCampaignStats);
+
+async function loadCampaignStats(){
+  $('campaignStatsStatus').textContent='جارٍ تحميل نتائج الحملات...';
+  const {data,error}=await db.from('service_requests')
+    .select('utm_campaign,utm_source,utm_medium,status')
+    .not('utm_campaign','is',null)
+    .order('created_at',{ascending:false}).limit(1000);
+  if(error){$('campaignStatsStatus').textContent='تعذر تحميل نتائج الحملات: '+error.message;return;}
+  const groups=new Map();
+  (data||[]).forEach(row=>{
+    const campaign=String(row.utm_campaign||'').trim();
+    if(!campaign)return;
+    const key=[campaign,row.utm_source||'',row.utm_medium||''].join('|');
+    const item=groups.get(key)||{campaign,source:row.utm_source||'—',medium:row.utm_medium||'—',total:0,completed:0};
+    item.total++;
+    if(row.status==='completed')item.completed++;
+    groups.set(key,item);
+  });
+  const rows=[...groups.values()].sort((a,b)=>b.total-a.total);
+  $('campaignStatsBody').innerHTML=rows.map(row=>'<tr><td>'+safe(row.campaign)+'</td><td>'+safe(row.source)+'</td><td>'+safe(row.medium)+'</td><td>'+row.total.toLocaleString('ar-EG')+'</td><td>'+row.completed.toLocaleString('ar-EG')+'</td></tr>').join('')||'<tr><td colspan="5" class="request-empty">لا توجد طلبات مرتبطة بحملات حتى الآن. استخدم رابط حملة لتبدأ التتبع.</td></tr>';
+  $('campaignStatsStatus').textContent='تم تحليل '+(data||[]).length.toLocaleString('ar-EG')+' طلبًا كحد أقصى من أحدث الطلبات. الأرقام تمثل طلبات وصلت من روابط UTM، وليست عدد نقرات الإعلانات.';
+}
 
 async function loadSeo(){
   const keys=['seo_title','seo_description','seo_keywords'];
