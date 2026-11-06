@@ -395,16 +395,47 @@ async function saveMediaDetails(id,button){
 async function deleteMedia(id){
   if(!confirm('هل تريد حذف الصورة من الموقع ومكتبة الصور؟'))return;
   const m=mediaRows.find(x=>x.id===id);if(!m)return;
-  const {error}=await db.from('media_items').delete().eq('id',id);
-  if(error)return toast('تعذر حذف الصورة: '+error.message);
-  if(!(m.file_path.startsWith('photo/')||m.file_path.startsWith('screan/')))await db.storage.from(BUCKET).remove([m.file_path]);
-  await loadMedia();$('mediaCount').textContent=mediaRows.length;toast('تم حذف الصورة من الموقع');
+  const isStatic=m.file_path.startsWith('photo/')||m.file_path.startsWith('screan/');
+  try{
+    const {error:hideError}=await db.from('media_items').update({is_published:false}).eq('id',id);
+    if(hideError)throw hideError;
+    if(!isStatic){
+      const {error:storageError}=await db.storage.from(BUCKET).remove([m.file_path]);
+      if(storageError)throw storageError;
+    }
+    const {error:rowError}=await db.from('media_items').delete().eq('id',id);
+    if(rowError)throw rowError;
+    await loadMedia();$('mediaCount').textContent=mediaRows.length;toast('تم حذف الصورة من الموقع');
+  }catch(error){
+    try{await loadMedia();$('mediaCount').textContent=mediaRows.length}catch(refreshError){console.error('تعذر تحديث مكتبة الصور',refreshError)}
+    toast('تعذر إكمال حذف الصورة. أُخفيت من الموقع؛ أعد المحاولة بعد التحقق من التخزين. '+(error.message||''));
+  }
 }
 async function loadPosts(){const {data,error}=await db.from('posts').select('*').order('created_at',{ascending:false});if(error)throw error;postRows=data||[];renderPosts()}
 function renderPosts(){$('postsList').innerHTML=postRows.map(p=>`<article class="post-row"><img src="${p.image_path?safe(publicUrl(p.image_path)):''}" alt=""><div class="info"><b>${safe(p.title)}</b><small>${new Date(p.created_at).toLocaleDateString('ar-EG')} · ${safe(p.excerpt)}</small></div><span class="pill ${p.is_published?'':'draft'}">${p.is_published?'منشور':'مسودة'}</span><button class="mini" data-edit-post="${p.id}">تعديل</button><button class="mini danger" data-delete-post="${p.id}">حذف</button></article>`).join('')||'<p class="muted">لا توجد منشورات حتى الآن.</p>';document.querySelectorAll('[data-edit-post]').forEach(b=>b.onclick=()=>editPost(b.dataset.editPost));document.querySelectorAll('[data-delete-post]').forEach(b=>b.onclick=()=>deletePost(b.dataset.deletePost))}
 function clearPost(){$('postForm').reset();$('postId').value='';$('postFormTitle').textContent='إنشاء منشور'}$('resetPost').onclick=clearPost;
 function editPost(id){const p=postRows.find(x=>x.id===id);$('postId').value=p.id;$('postTitle').value=p.title;$('postExcerpt').value=p.excerpt;$('postBody').value=p.body;$('postPublished').checked=p.is_published;$('postFormTitle').textContent='تعديل المنشور';go('posts');window.scrollTo({top:0,behavior:'smooth'})}
 $('postForm').addEventListener('submit',async e=>{e.preventDefault();const id=$('postId').value;const payload={title:$('postTitle').value.trim(),excerpt:$('postExcerpt').value,body:$('postBody').value,is_published:$('postPublished').checked,updated_at:new Date().toISOString()};let uploadedPath=null;const file=$('postImage').files[0];if(file){const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');uploadedPath=`posts/${crypto.randomUUID()}.${ext}`;const up=await db.storage.from(BUCKET).upload(uploadedPath,file,{contentType:file.type});if(up.error){$('postStatus').textContent=up.error.message;return}payload.image_path=uploadedPath}if(payload.is_published)payload.published_at=new Date().toISOString();if(!id)payload.created_by=currentUser.id;const query=id?db.from('posts').update(payload).eq('id',id):db.from('posts').insert(payload);const {error}=await query;if(error){if(uploadedPath)await db.storage.from(BUCKET).remove([uploadedPath]);$('postStatus').textContent=error.message;return}$('postStatus').textContent='تم حفظ المنشور.';clearPost();await loadPosts();$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length;toast('تم حفظ المنشور')});
-async function deletePost(id){if(!confirm('حذف هذا المنشور؟'))return;const p=postRows.find(x=>x.id===id);const {error}=await db.from('posts').delete().eq('id',id);if(error)return toast(error.message);if(p.image_path)await db.storage.from(BUCKET).remove([p.image_path]);await loadPosts();$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length;toast('تم حذف المنشور')}
+async function deletePost(id){
+  if(!confirm('حذف هذا المنشور؟'))return;
+  const p=postRows.find(x=>x.id===id);if(!p)return;
+  try{
+    const {error:hideError}=await db.from('posts').update({is_published:false,updated_at:new Date().toISOString()}).eq('id',id);
+    if(hideError)throw hideError;
+    if(p.image_path){
+      const isStatic=p.image_path.startsWith('photo/')||p.image_path.startsWith('screan/');
+      if(!isStatic){
+        const {error:storageError}=await db.storage.from(BUCKET).remove([p.image_path]);
+        if(storageError)throw storageError;
+      }
+    }
+    const {error:rowError}=await db.from('posts').delete().eq('id',id);
+    if(rowError)throw rowError;
+    await loadPosts();$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length;toast('تم حذف المنشور');
+  }catch(error){
+    try{await loadPosts();$('postCount').textContent=postRows.length;$('publishedCount').textContent=postRows.filter(p=>p.is_published).length}catch(refreshError){console.error('تعذر تحديث قائمة المنشورات',refreshError)}
+    toast('تعذر إكمال حذف المنشور. أُخفي من الموقع؛ أعد المحاولة بعد التحقق من التخزين. '+(error.message||''));
+  }
+}
 initAdminTheme();
 (async()=>{const {data:{session}}=await db.auth.getSession();if(session){try{await showApp(session.user)}catch(e){$('loginError').textContent=e.message;await db.auth.signOut()}}})();
