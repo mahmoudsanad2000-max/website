@@ -29,7 +29,7 @@
     :root[data-theme="dark"] .request-detail-item {background:#2b231b;border-color:#3c3025}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="admin.js?v=seo-controls-20261119-1"></script>
+  <script defer src="admin.js?v=seo-headings-20261119-1"></script>
 </head>
 <body>
   <div id="loginScreen" class="login-wrap">
@@ -82,6 +82,22 @@
             <div class="form-actions"><button class="btn primary" type="submit">حفظ إعدادات SEO</button></div>
           </form>
           <p id="seoStatus" class="status" aria-live="polite"></p>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h3>عناوين الموقع H1 وH2</h3><p>عدّل العنوان الرئيسي وعناوين الأقسام الظاهرة في الصفحة. التعديلات تحفظ ضمن محتوى الموقع.</p></div></div>
+          <form id="seoHeadingsForm" class="post-form">
+            <label>العنوان الرئيسي H1<input id="seoHeadingH1" maxlength="120" required><small class="seo-counter">عنوان واحد واضح يشرح الخدمة والمنطقة.</small></label>
+            <label>عنوان قسم «من نحن» H2<input id="seoHeadingAbout" maxlength="120"></label>
+            <label>عنوان قسم الخدمات H2<input id="seoHeadingServices" maxlength="120"></label>
+            <label>عنوان قسم «لماذا نحن» H2<input id="seoHeadingWhy" maxlength="120"></label>
+            <label>عنوان المعرض H2<input id="seoHeadingGallery" maxlength="120"></label>
+            <label>عنوان آلية العمل H2<input id="seoHeadingHow" maxlength="120"></label>
+            <label>عنوان آراء العملاء H2<input id="seoHeadingTestimonials" maxlength="120"></label>
+            <label>عنوان التواصل H2<input id="seoHeadingContact" maxlength="120"></label>
+            <p class="seo-note">اكتب العناوين للزائر بصياغة طبيعية ومحددة، وتجنب تكرار نفس الكلمة في كل عنوان. لا يوجد عدد سحري من عناوين H2 أو ترتيب خاص يضمن الظهور.</p>
+            <div class="form-actions"><button class="btn primary" type="submit">حفظ عناوين H1 وH2</button></div>
+          </form>
+          <p id="seoHeadingsStatus" class="status" aria-live="polite"></p>
         </div>
         <div class="panel">
           <div class="panel-head"><div><h3>إنشاء رابط حملة تسويقية</h3><p>أنشئ رابطًا مختلفًا لكل إعلان أو منشور حتى تعرف مصدر طلبات الصيانة.</p></div></div>

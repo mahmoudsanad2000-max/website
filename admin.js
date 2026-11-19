@@ -341,7 +341,7 @@ async function loadCampaignStats(){
 }
 
 async function loadSeo(){
-  const keys=['seo_title','seo_description','seo_keywords','seo_image','seo_canonical','seo_google_verification','seo_noindex'];
+  const keys=['seo_title','seo_description','seo_keywords','seo_image','seo_canonical','seo_google_verification','seo_noindex','hero_title','about_title','services_title','why_title','gallery_title','how_title','testimonials_title','contact_title'];
   const {data,error}=await db.from('site_content').select('key,value').in('key',keys);
   if(error)throw error;
   const values=Object.fromEntries((data||[]).map(row=>[row.key,row.value]));
@@ -352,6 +352,8 @@ async function loadSeo(){
   $('seoCanonical').value=values.seo_canonical||'https://office-designs.online/';
   $('seoGoogleVerification').value=values.seo_google_verification||'';
   $('seoNoIndex').checked=values.seo_noindex==='true';
+  const headingFields=[['seoHeadingH1','hero_title'],['seoHeadingAbout','about_title'],['seoHeadingServices','services_title'],['seoHeadingWhy','why_title'],['seoHeadingGallery','gallery_title'],['seoHeadingHow','how_title'],['seoHeadingTestimonials','testimonials_title'],['seoHeadingContact','contact_title']];
+  headingFields.forEach(([id,key])=>$(id).value=values[key]||'');
   updateSeoPreview();
 }
 function updateSeoPreview(){
@@ -386,6 +388,16 @@ $('seoForm').addEventListener('submit',async e=>{
   const {error}=await db.from('site_content').upsert(rows,{onConflict:'key'});
   $('seoStatus').textContent=error?'تعذر الحفظ: '+error.message:'تم حفظ إعدادات SEO. ستظهر التغييرات على الموقع بعد تحديث الصفحة.';
   if(!error)toast('تم حفظ إعدادات SEO');
+});
+$('seoHeadingsForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const headingFields=[['seoHeadingH1','hero_title'],['seoHeadingAbout','about_title'],['seoHeadingServices','services_title'],['seoHeadingWhy','why_title'],['seoHeadingGallery','gallery_title'],['seoHeadingHow','how_title'],['seoHeadingTestimonials','testimonials_title'],['seoHeadingContact','contact_title']];
+  const rows=headingFields.map(([id,key])=>({key,value:$(id).value.trim(),updated_by:currentUser.id,updated_at:new Date().toISOString()}));
+  if(!rows[0].value){$('seoHeadingsStatus').textContent='أدخل عنوان H1 واضحاً قبل الحفظ.';return}
+  $('seoHeadingsStatus').textContent='جارٍ حفظ عناوين الصفحة...';
+  const {error}=await db.from('site_content').upsert(rows,{onConflict:'key'});
+  $('seoHeadingsStatus').textContent=error?'تعذر حفظ العناوين: '+error.message:'تم حفظ عناوين H1 وH2. ستظهر على الموقع بعد تحديث الصفحة.';
+  if(!error)toast('تم حفظ عناوين H1 وH2');
 });
 
 $('saveContent').addEventListener('click',async()=>{const rows=[...document.querySelectorAll('[data-key]')].map(el=>({key:el.dataset.key,value:el.value,updated_by:currentUser.id,updated_at:new Date().toISOString()}));const {error}=await db.from('site_content').upsert(rows,{onConflict:'key'});$('contentStatus').textContent=error?error.message:'تم حفظ التعديلات بنجاح.';if(!error)toast('تم حفظ محتوى الموقع')});
