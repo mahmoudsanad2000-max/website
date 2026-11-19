@@ -41,7 +41,7 @@ html {
 }
 
 body {
-  font-family: "Inter", sans-serif;
+  font-family: Arial, "Segoe UI", sans-serif;
   background:
     radial-gradient(circle at 10% 10%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 38%),
     radial-gradient(circle at 90% 0%, color-mix(in srgb, var(--primary) 10%, transparent) 0%, transparent 32%),
@@ -179,7 +179,7 @@ h2::after {
   min-height: 85vh;
   display: grid;
   place-items: center;
-  background: url("photo/hero.jpg") center/cover no-repeat;
+  background: url("photo/hero.webp") center/cover no-repeat;
 }
 
 .hero-overlay {

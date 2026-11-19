@@ -5,7 +5,10 @@
   const KEY = 'sb_publishable_Cb_uRCVqJk1x3drkGuuTwQ__a4aOha1';
   const BUCKET = 'office-media';
   const client = window.supabase.createClient(URL, KEY);
-  const getUrl = path => (path.startsWith('photo/') || path.startsWith('screan/')) ? '/'+path : client.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  const getUrl = path => {
+    if(path.startsWith('photo/')||path.startsWith('screan/')) return '/'+path.replace(/\.(?:jpe?g|png)$/i,'.webp');
+    return client.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  };
   function getMarketingAttribution(){
     const keys=['utm_source','utm_medium','utm_campaign','utm_content'];
     try{
@@ -54,14 +57,26 @@
     if(settings.seo_title){document.title=settings.seo_title;setMeta('meta[property="og:title"]','property','og:title',settings.seo_title);setMeta('meta[name="twitter:title"]','name','twitter:title',settings.seo_title);}
     if(settings.seo_description){setMeta('meta[name="description"]','name','description',settings.seo_description);setMeta('meta[property="og:description"]','property','og:description',settings.seo_description);setMeta('meta[name="twitter:description"]','name','twitter:description',settings.seo_description);}
     if(settings.seo_keywords)setMeta('meta[name="keywords"]','name','keywords',settings.seo_keywords);
+    if(settings.seo_image){setMeta('meta[property="og:image"]','property','og:image',settings.seo_image);setMeta('meta[name="twitter:image"]','name','twitter:image',settings.seo_image);}
+    if(settings.seo_image){setMeta('meta[property="og:image:alt"]','property','og:image:alt','خدمات صيانة وإصلاح كراسي المكاتب من Office Design');setMeta('meta[name="twitter:image:alt"]','name','twitter:image:alt','خدمات صيانة وإصلاح كراسي المكاتب من Office Design');}
+    if(settings.seo_google_verification)setMeta('meta[name="google-site-verification"]','name','google-site-verification',settings.seo_google_verification);
+    const robots=settings.seo_noindex==='true'?'noindex, nofollow':'index, follow, max-image-preview:large';
+    setMeta('meta[name="robots"]','name','robots',robots);
+    setMeta('meta[name="googlebot"]','name','googlebot',settings.seo_noindex==='true'?'noindex, nofollow':'index, follow');
     setMeta('meta[property="og:type"]','property','og:type','website');
-    setMeta('meta[property="og:url"]','property','og:url',window.location.href.split('#')[0]);
+    const canonical=settings.seo_canonical||window.location.href.split('#')[0];
+    let canonicalLink=document.querySelector('link[rel="canonical"]');
+    if(!canonicalLink){canonicalLink=document.createElement('link');canonicalLink.rel='canonical';document.head.appendChild(canonicalLink);}
+    canonicalLink.href=canonical;
+    setMeta('meta[property="og:url"]','property','og:url',canonical);
     setMeta('meta[name="twitter:card"]','name','twitter:card','summary_large_image');
+    const schema=document.querySelector('script[type="application/ld+json"]');
+    if(schema){try{const data=JSON.parse(schema.textContent);if(settings.seo_description)data.description=settings.seo_description;if(canonical)data.url=canonical;schema.textContent=JSON.stringify(data);}catch(_){}}
   }
   async function init(){
     const [{data:content,error:cErr},{data:media,error:mErr}] = await Promise.all([
       client.from('site_content').select('key,value'),
-      client.from('media_items').select('*').eq('is_published',true).order('sort_order')
+      client.from('media_items').select('section,file_path,alt_text,title,sort_order').eq('is_published',true).order('sort_order')
     ]);
     if(cErr||mErr) { console.warn('Office Design CMS: using original page content.',cErr||mErr); return; }
     const c=Object.fromEntries((content||[]).map(x=>[x.key,x.value]));
@@ -107,7 +122,7 @@
     const reviews=document.querySelector('#testimonialTrack'); if(reviews){const items=media.filter(x=>x.section==='testimonials');reviews.innerHTML=items.map(x=>`<article class="review-shot"><img loading="lazy" class="lightbox-trigger" src="${getUrl(x.file_path)}" alt="${escapeHtml(x.alt_text||x.title)}"></article>`).join('');}
     // Load optional blog content only when the visitor approaches its position.
     const loadPosts = async () => {
-      const {data:posts,error:pErr} = await client.from('posts').select('*').eq('is_published',true).order('published_at',{ascending:false});
+      const {data:posts,error:pErr} = await client.from('posts').select('title,excerpt,body,image_path,published_at').eq('is_published',true).order('published_at',{ascending:false});
       if(pErr) { console.warn('Office Design posts:',pErr); return; }
       if(posts?.length) renderPosts(posts);
     };
@@ -128,7 +143,7 @@
   function renderPosts(posts){
     const contact=document.querySelector('#contact');if(!contact)return;
     let section=document.querySelector('#cms-posts');if(!section){section=document.createElement('section');section.id='cms-posts';section.className='section';section.innerHTML='<div class="container"><h2>آخر الأخبار والمنشورات</h2><div class="cards-grid" id="cms-post-list"></div></div>';contact.parentNode.insertBefore(section,contact);}
-    const list=section.querySelector('#cms-post-list');list.innerHTML=posts.map(p=>`<article class="card">${p.image_path?`<img src="${getUrl(p.image_path)}" alt="${escapeHtml(p.title)}" style="width:100%;height:190px;object-fit:cover;margin-bottom:12px">`:''}<h3>${escapeHtml(p.title)}</h3><p>${escapeHtml(p.excerpt)}</p>${p.body?`<details><summary>اقرأ المزيد</summary><p>${escapeHtml(p.body).replace(/\n/g,'<br>')}</p></details>`:''}</article>`).join('');
+    const list=section.querySelector('#cms-post-list');list.innerHTML=posts.map(p=>`<article class="card">${p.image_path?`<img loading="lazy" decoding="async" src="${getUrl(p.image_path)}" alt="${escapeHtml(p.title)}" style="width:100%;height:190px;object-fit:cover;margin-bottom:12px">`:''}<h3>${escapeHtml(p.title)}</h3><p>${escapeHtml(p.excerpt)}</p>${p.body?`<details><summary>اقرأ المزيد</summary><p>${escapeHtml(p.body).replace(/\n/g,'<br>')}</p></details>`:''}</article>`).join('');
   }
   function scheduleInit(){
     const start = () => {

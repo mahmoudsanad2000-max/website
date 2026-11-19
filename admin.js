@@ -341,20 +341,46 @@ async function loadCampaignStats(){
 }
 
 async function loadSeo(){
-  const keys=['seo_title','seo_description','seo_keywords'];
+  const keys=['seo_title','seo_description','seo_keywords','seo_image','seo_canonical','seo_google_verification','seo_noindex'];
   const {data,error}=await db.from('site_content').select('key,value').in('key',keys);
   if(error)throw error;
   const values=Object.fromEntries((data||[]).map(row=>[row.key,row.value]));
   $('seoTitle').value=values.seo_title||'';
   $('seoDescription').value=values.seo_description||'';
   $('seoKeywords').value=values.seo_keywords||'';
+  $('seoImage').value=values.seo_image||'';
+  $('seoCanonical').value=values.seo_canonical||'https://office-designs.online/';
+  $('seoGoogleVerification').value=values.seo_google_verification||'';
+  $('seoNoIndex').checked=values.seo_noindex==='true';
+  updateSeoPreview();
 }
+function updateSeoPreview(){
+  const title=$('seoTitle').value.trim()||'صيانة وإصلاح كراسي المكاتب في القاهرة والجيزة | Office Design';
+  const description=$('seoDescription').value.trim()||'خدمات صيانة وإصلاح كراسي المكاتب في القاهرة والجيزة ومدينة 6 أكتوبر والقاهرة الجديدة.';
+  $('seoTitleCount').textContent=$('seoTitle').value.length+' / 60 حرفاً مقترحاً';
+  $('seoDescriptionCount').textContent=$('seoDescription').value.length+' / 160 حرفاً مقترحاً';
+  $('seoPreviewTitle').textContent=title;$('seoPreviewDescription').textContent=description;
+  $('seoPreviewUrl').textContent=$('seoCanonical').value.trim()||'https://office-designs.online/';
+  const checks=[
+    [$('seoTitle').value.trim().length>=25&&$('seoTitle').value.trim().length<=60,'عنوان الصفحة بطول مناسب (25–60 حرفاً)'],
+    [$('seoDescription').value.trim().length>=100&&$('seoDescription').value.trim().length<=160,'وصف الصفحة بطول مناسب (100–160 حرفاً)'],
+    [Boolean($('seoImage').value.trim()),'أضف صورة مشاركة واضحة (Open Graph)'],
+    [Boolean($('seoCanonical').value.trim()),'الرابط الأساسي محدد'],
+    [!$('seoNoIndex').checked,'الموقع مسموح بفهرسته']
+  ];
+  $('seoAudit').innerHTML='<b>مراجعة سريعة</b>'+checks.map(([ok,label])=>'<span class="seo-audit-item '+(ok?'good':'needs-attention')+'">'+(ok?'✓ ':'! ')+label+'</span>').join('');
+}
+['seoTitle','seoDescription','seoImage','seoCanonical','seoNoIndex'].forEach(id=>$(id).addEventListener('input',updateSeoPreview));
 $('seoForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const rows=[
     {key:'seo_title',value:$('seoTitle').value.trim()},
     {key:'seo_description',value:$('seoDescription').value.trim()},
-    {key:'seo_keywords',value:$('seoKeywords').value.trim()}
+    {key:'seo_keywords',value:$('seoKeywords').value.trim()},
+    {key:'seo_image',value:$('seoImage').value.trim()},
+    {key:'seo_canonical',value:$('seoCanonical').value.trim()},
+    {key:'seo_google_verification',value:$('seoGoogleVerification').value.trim()},
+    {key:'seo_noindex',value:String($('seoNoIndex').checked)}
   ].map(row=>({...row,updated_by:currentUser.id,updated_at:new Date().toISOString()}));
   $('seoStatus').textContent='جارٍ حفظ إعدادات SEO...';
   const {error}=await db.from('site_content').upsert(rows,{onConflict:'key'});
